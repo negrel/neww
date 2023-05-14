@@ -5,10 +5,12 @@ use quick_xml::{
     Reader, Writer,
 };
 
+use super::scripts::{Script, ScriptLang};
+
 #[derive(Debug)]
 pub struct Ui {
     pub gtk_ui: String,
-    scripts: Vec<String>,
+    pub scripts: Vec<Script>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -46,18 +48,35 @@ pub fn parse(src: &str) -> Result<Ui, ParseError> {
     })
 }
 
+/// NewwTag enumerate valid GTK UI tags of the form: "neww:<tag>".
 enum NewwTag {
     Script,
+}
+
+impl TryFrom<QName<'_>> for NewwTag {
+    type Error = anyhow::Error;
+
+    fn try_from(value: QName) -> Result<Self, Self::Error> {
+        match value.as_ref() {
+            b"neww:script" => Ok(NewwTag::Script),
+            _ => Err(anyhow!("unknown neww tag")),
+        }
+    }
 }
 
 impl TryFrom<&BytesStart<'_>> for NewwTag {
     type Error = anyhow::Error;
 
     fn try_from(value: &BytesStart) -> Result<Self, Self::Error> {
-        match value.name().as_ref() {
-            b"neww:script" => Ok(NewwTag::Script),
-            _ => Err(anyhow!("unknown neww tag")),
-        }
+        Self::try_from(value.name())
+    }
+}
+
+impl TryFrom<&BytesEnd<'_>> for NewwTag {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &BytesEnd) -> Result<Self, Self::Error> {
+        Self::try_from(value.name())
     }
 }
 
@@ -127,15 +146,19 @@ fn is_neww_end_tag(tag: &BytesEnd) -> bool {
 }
 
 // Parse content of a single neww:script tag.
-fn parse_neww_script(reader: &mut Reader<&[u8]>) -> Result<String, anyhow::Error> {
+fn parse_neww_script(reader: &mut Reader<&[u8]>) -> Result<Script, anyhow::Error> {
+    let script_lang = ScriptLang::Lua;
     let mut script_content = "".to_owned();
+
     loop {
         let event = reader.read_event()?;
         match event {
             Event::Text(text) => script_content = String::from_utf8(text.to_vec())?,
-            Event::End(end_tag) => match end_tag.local_name().as_ref() {
-                b"script" => return Ok(script_content),
-                _ => return Err(anyhow!("neww:script tags can only contain text")),
+            Event::End(ref end_tag) => match NewwTag::try_from(end_tag) {
+                Ok(neww_tag) => match neww_tag {
+                    NewwTag::Script => return Ok(Script::new(script_lang, script_content)),
+                },
+                Err(_) => return Err(anyhow!("neww:script tags can only contain text")),
             },
             Event::Start(_)
             | Event::Empty(_)
@@ -154,6 +177,8 @@ fn parse_neww_script(reader: &mut Reader<&[u8]>) -> Result<String, anyhow::Error
 #[cfg(test)]
 mod test {
     use claims::{assert_err, assert_ok};
+
+    use crate::ui::scripts::ScriptLang;
 
     #[test]
     fn simple_gtk_ui_is_valid() {
@@ -208,6 +233,14 @@ mod test {
 </interface>
         "#,
             ui.gtk_ui
+        );
+
+        assert_eq!(ScriptLang::Lua, ui.scripts[0].lang);
+        assert_eq!(
+            r#"
+		println("Hello world")
+	"#,
+            ui.scripts[0].source
         );
     }
 
