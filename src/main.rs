@@ -1,13 +1,10 @@
 use env_logger::Env;
 use gtk::{prelude::*, Builder};
 
+mod lua;
 mod ui;
 
-use mlua::Lua;
-
 fn activate(app: &gtk::Application) {
-    let lua = Lua::new();
-
     let ui_filepath = "./examples/helloworld/neww.ui";
 
     // Read UI file.
@@ -26,13 +23,19 @@ fn activate(app: &gtk::Application) {
     builder
         .add_from_string(&ui.gtk_ui)
         .expect("Failed to build GTK UI");
+    let widget = builder
+        .object::<gtk::Widget>("body")
+        .expect("No body widget found");
+    let app_window = gtk::ApplicationWindow::new(app);
+    app_window.set_child(Some(&widget));
     log::debug!("GTK UI built.");
 
     // Load scripts.
     log::debug!("loading lua scripts...");
+    let lua_vm = lua::new_vm(app_window).expect("Failed to initialize lua VM");
     let mut chunks = Vec::new();
     for script in ui.scripts {
-        chunks.push(lua.load(Box::leak(Box::new(script.source))));
+        chunks.push(lua_vm.load(Box::leak(Box::new(script.source))));
     }
     log::debug!("lua scripts loaded.");
 
@@ -42,15 +45,6 @@ fn activate(app: &gtk::Application) {
         chunk.exec().expect("Failed to execute lua script");
     }
     log::debug!("lua scripts executed.");
-
-    let app_window = gtk::ApplicationWindow::builder()
-        .application(app)
-        .child(&builder.object::<gtk::Widget>("body").unwrap())
-        .width_request(600)
-        .height_request(400)
-        .build();
-
-    app_window.show()
 }
 
 fn main() {

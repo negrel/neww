@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+	<neww:script>
+		application.shell.layer = "background"
+		application.shell:set_anchors({
+			left = true,
+			top = true,
+			right = true,
+			bottom = true
+		})
+		application.window.default_width = 1920
+		application.window.default_height = 1080
+		application.window:show()
+	</neww:script>
+		<object class="GtkImage" id="body">
+			<property name="visible">True</property>
+			<property name="file">examples/background/image.jpg</property>
+	</object>
+</interface>
+

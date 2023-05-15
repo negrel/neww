@@ -11,7 +11,7 @@
     };
   };
 
-  outputs = { flake-utils, nixpkgs, fenix, ... }@inputs:
+  outputs = { flake-utils, nixpkgs, fenix, self, ... }@inputs:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -25,7 +25,7 @@
             pkg-config
             gtk4
             luajit
-          ];
+          ] ++ [ self.packages."${system}".gtk4-layer-shell ];
         in
         {
           devShells = {
@@ -38,6 +38,9 @@
               );
               LD_LIBRARY_PATH = "${lib.makeLibraryPath pkgBuildInputs}";
             };
+          };
+          packages = {
+            gtk4-layer-shell = pkgs.callPackage ./nix/gtk4-layer-shell.nix { };
           };
         });
 }
