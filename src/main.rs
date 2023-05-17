@@ -1,16 +1,30 @@
+use std::path::PathBuf;
+
 use env_logger::Env;
 use gtk::{prelude::*, Builder};
+
+use crate::lua::application::Application;
 
 mod lua;
 mod ui;
 
 fn activate(app: &gtk::Application) {
-    let ui_filepath = "./examples/helloworld/neww.ui";
+    let binding = std::env::args().collect::<Vec<_>>();
+    let ui_filepath = binding.get(1).expect("UI file path is missing");
+    let ui_filepath: PathBuf = ui_filepath.into();
+    let ui_filepath = ui_filepath.canonicalize().expect("UI file doesn't exist");
+    // Safe to unwrap because path is absolute.
+    let ui_filepath_parent = ui_filepath.parent().unwrap();
 
     // Read UI file.
     log::debug!("reading {ui_filepath:?}...");
-    let ui_file = std::fs::read_to_string(ui_filepath).expect("Failed to read UI file");
+    let ui_file = std::fs::read_to_string(&ui_filepath).expect("Failed to read UI file");
     log::debug!("{ui_filepath:?} read.");
+
+    // Setting CWD.
+    log::debug!("changing working directory...");
+    std::env::set_current_dir(ui_filepath_parent).expect("Failed to change working directory");
+    log::debug!("working directory successfully changed.");
 
     // Parse UI file.
     log::debug!("parsing {ui_filepath:?}...");
@@ -23,16 +37,13 @@ fn activate(app: &gtk::Application) {
     builder
         .add_from_string(&ui.gtk_ui)
         .expect("Failed to build GTK UI");
-    let widget = builder
-        .object::<gtk::Widget>("body")
-        .expect("No body widget found");
-    let app_window = gtk::ApplicationWindow::new(app);
-    app_window.set_child(Some(&widget));
     log::debug!("GTK UI built.");
+
+    let neww_app = Application::new(app, builder);
 
     // Load scripts.
     log::debug!("loading lua scripts...");
-    let lua_vm = lua::new_vm(app_window).expect("Failed to initialize lua VM");
+    let lua_vm = lua::new_vm(neww_app).expect("Failed to initialize lua VM");
     let mut chunks = Vec::new();
     for script in ui.scripts {
         chunks.push(lua_vm.load(Box::leak(Box::new(script.source))));
@@ -57,5 +68,5 @@ fn main() {
 
     app.connect_activate(activate);
 
-    app.run();
+    app.run_with_args(&[""]);
 }

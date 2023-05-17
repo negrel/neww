@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
 	<neww:script>
-		application.shell.layer = "background"
-		application.shell:set_anchors({
-			left = true,
-			top = true,
-			right = true,
-			bottom = true
-		})
-		application.window.default_width = 1920
-		application.window.default_height = 1080
-		application.window:show()
+		local shell = application.window:shell()
+		shell.layer = "background"
+
+		local body = application:find_widget_by_id("body")
+		body.hexpand = true
+		body.vexpand = true
+
+		-- Change to your screen resolution
+		application.window.default_height = 2000
+		application.window.default_width = 3000
 	</neww:script>
-		<object class="GtkImage" id="body">
-			<property name="visible">True</property>
-			<property name="file">examples/background/image.jpg</property>
+	<object class="GtkImage" id="body">
+		<property name="file">./image.jpg</property>
+	</object>
+	<object class="GtkImage" id="body2">
+		<property name="file">/home/anegrel/.config/gen-theme/wallpapers/space.jpg</property>
 	</object>
 </interface>
 

@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
 	<neww:script>
-		application.shell.layer = "overlay"
-		application.shell.auto_exclusive_zone = true
-		application.shell:set_anchors({left = true, top = true, right = true})
-		application.window:show()
+		local shell = application.window:shell()
+		shell.auto_exclusive_zone = true
+		shell:set_anchors({left = true, top = true, right = true})
+		shell.layer = "overlay"
 	</neww:script>
-	<object class="GtkBox" id="body">
-		<child>
-			<object class="GtkLabel">
-				<property name="label">Hello world!</property>
-			</object>
-		</child>
+	<object class="GtkLabel" id="body">
+		<property name="label">Hello world</property>
 	</object>
 </interface>
 
