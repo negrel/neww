@@ -12,11 +12,14 @@ pub mod glib;
 pub mod gtk;
 pub mod gtk_layer_shell;
 
-pub fn new_vm(window: ::gtk::ApplicationWindow) -> Result<Lua, anyhow::Error> {
+#[macro_use]
+pub mod macros;
+
+pub fn new_vm(app: Application) -> Result<Lua, anyhow::Error> {
     let vm = Lua::new();
 
     vm.globals()
-        .set("application", Application::new(window))
+        .set("application", app)
         .context("Failed to define global application table")?;
 
     load_neww_ui_module(&vm).context("Failed to load neww.ui module")?;

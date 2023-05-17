@@ -9,7 +9,9 @@ pub struct LayerShell {
 
 impl LayerShell {
     pub fn new(window: gtk::Window) -> LayerShell {
-        gtk4_layer_shell::init_for_window(&window);
+        if !gtk4_layer_shell::is_layer_window(&window) {
+            gtk4_layer_shell::init_for_window(&window);
+        }
 
         Self { window }
     }

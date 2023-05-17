@@ -1,33 +1,10 @@
-use gtk::traits::{GtkWindowExt, WidgetExt};
-use mlua::{FromLua, UserData};
+use gtk::{prelude::Cast, traits::GtkWindowExt};
+use mlua::UserData;
 
-use crate::lua::glib::GString;
-
-macro_rules! add_method_no_args_no_return {
-    ($methods:ident, $method_name:ident) => {
-        $methods.add_method(stringify!($method_name), |_vm, this, ()| {
-            this.0.$method_name();
-            Ok(())
-        });
-    };
-}
-
-macro_rules! add_field_getter {
-    ($fields:ident, $field_name:ident, $getter_name: ident) => {
-        $fields.add_field_method_get(stringify!($field_name), |_vm, this| {
-            Ok(this.0.$getter_name())
-        });
-    };
-}
-
-macro_rules! add_field_setter {
-    ($fields:ident, $field_name:ident, $setter_name: ident) => {
-        $fields.add_field_method_set(stringify!($field_name), |_vm, this, value| {
-            this.0.$setter_name(value);
-            Ok(())
-        })
-    };
-}
+use crate::{
+    add_field_getter, add_field_setter, add_method_no_args_no_return, add_upcast_method,
+    lua::{gtk::Widget, gtk_layer_shell::LayerShell},
+};
 
 #[derive(Debug, Clone)]
 pub struct Window(pub gtk::Window);
@@ -59,28 +36,6 @@ impl UserData for Window {
 
         add_field_getter!(fields, default_height, default_height);
         add_field_setter!(fields, default_height, set_default_height);
-
-        // Getter for css_name.
-        fields.add_field_method_get("css_name", |_vm, this| Ok(GString(this.0.css_name())));
-
-        // Getter & setter for css_classes.
-        fields.add_field_method_get("css_classes", |_vm, this| {
-            Ok(this
-                .0
-                .css_classes()
-                .into_iter()
-                .map(GString)
-                .collect::<Vec<GString>>())
-        });
-        fields.add_field_method_set("css_classes", |vm, this, value| {
-            let css_classes: Vec<mlua::String> = Vec::from_lua(value, vm)?;
-            let css_classes: Result<Vec<_>, _> =
-                css_classes.iter().map(|class| class.to_str()).collect();
-            let css_classes = css_classes?;
-
-            this.0.set_css_classes(&css_classes);
-            Ok(())
-        });
     }
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -90,6 +45,10 @@ impl UserData for Window {
         add_method_no_args_no_return!(methods, unmaximize);
         add_method_no_args_no_return!(methods, minimize);
         add_method_no_args_no_return!(methods, unminimize);
-        add_method_no_args_no_return!(methods, show);
+        add_method_no_args_no_return!(methods, present);
+
+        add_upcast_method!(methods, Widget);
+
+        methods.add_method("shell", |_vm, this, ()| Ok(LayerShell::new(this.0.clone())));
     }
 }

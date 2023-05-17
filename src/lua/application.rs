@@ -1,18 +1,29 @@
-use gtk::prelude::Cast;
-use mlua::UserData;
+use gtk::traits::GtkWindowExt;
+use mlua::{FromLua, UserData};
 
-use super::{gtk::Window, gtk_layer_shell::LayerShell};
+use super::gtk::{Widget, Window};
 
 pub struct Application {
+    builder: gtk::Builder,
     window: Window,
-    layer_shell: LayerShell,
 }
 
 impl Application {
-    pub fn new(window: gtk::ApplicationWindow) -> Self {
+    pub fn new(app: &gtk::Application, builder: gtk::Builder) -> Self {
+        let app_window = gtk::ApplicationWindow::new(app);
+
+        // Define body if there is one.
+        if let Some(body) = builder.object::<gtk::Widget>("body") {
+            // Initialize layer.
+            gtk4_layer_shell::init_for_window(&app_window);
+
+            app_window.set_child(Some(&body));
+            app_window.present();
+        }
+
         Self {
-            window: Window(window.clone().into()),
-            layer_shell: LayerShell::new(window.upcast()),
+            builder,
+            window: Window(app_window.into()),
         }
     }
 }
@@ -20,8 +31,15 @@ impl Application {
 impl UserData for Application {
     fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
         fields.add_field_method_get("window", |_vm, this| Ok(this.window.clone()));
-        fields.add_field_method_get("shell", |_vm, this| Ok(this.layer_shell.clone()))
     }
 
-    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(_methods: &mut M) {}
+    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("find_widget_by_id", |vm, this, id| {
+            let widget = this
+                .builder
+                .object::<gtk::Widget>(String::from_lua(id, vm)?)
+                .expect("Widget not found");
+            Ok(Widget(widget))
+        })
+    }
 }
