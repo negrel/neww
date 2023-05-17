@@ -6,14 +6,8 @@ use self::application::Application;
 // Global application user data.
 pub mod application;
 
-// Bindings modules
-pub mod gdk;
-pub mod glib;
-pub mod gtk;
-pub mod gtk_layer_shell;
-
-#[macro_use]
-pub mod macros;
+// Bindings
+pub mod bindings;
 
 pub fn new_vm(app: Application) -> Result<Lua, anyhow::Error> {
     let vm = Lua::new();

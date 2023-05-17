@@ -3,7 +3,7 @@ use mlua::UserData;
 
 use crate::{
     add_field_getter, add_field_setter, add_method_no_args_no_return, add_upcast_method,
-    lua::{gtk::Widget, gtk_layer_shell::LayerShell},
+    lua::bindings::{gtk::Widget, gtk_layer_shell::LayerShell},
 };
 
 #[derive(Debug, Clone)]

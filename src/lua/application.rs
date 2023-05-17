@@ -1,7 +1,7 @@
 use gtk::traits::GtkWindowExt;
 use mlua::{FromLua, UserData};
 
-use super::gtk::{Widget, Window};
+use super::bindings::gtk::{Widget, Window};
 
 pub struct Application {
     builder: gtk::Builder,

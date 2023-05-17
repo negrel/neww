@@ -3,7 +3,7 @@ use mlua::{FromLua, UserData};
 
 use crate::{
     add_downcast_method, add_field_getter, add_field_setter, add_mapped_field_getter, add_method,
-    lua::{glib::GString, gtk::Window},
+    lua::bindings::{glib::GString, gtk::Window},
 };
 
 #[derive(Debug, Clone)]
