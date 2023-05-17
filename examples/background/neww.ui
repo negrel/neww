@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
 	<neww:script>
+		local ui = require("neww.ui")
+
 		local shell = application.window:shell()
 		shell.layer = "background"
 
-		local body = application:find_widget_by_id("body")
-		body.hexpand = true
-		body.vexpand = true
-
-		-- Change to your screen resolution
-		application.window.default_height = 2000
-		application.window.default_width = 3000
+		-- Set window size to monitor size
+		local monitors = application.window:as_root().display.monitors
+		local monitor = monitors[1]
+		application.window.default_height = monitor.scaled_geometry.height
+		application.window.default_width = monitor.scaled_geometry.width
 	</neww:script>
 	<object class="GtkImage" id="body">
+		<property name="hexpand">True</property>
+		<property name="vexpand">True</property>
 		<property name="file">./image.jpg</property>
-	</object>
-	<object class="GtkImage" id="body2">
-		<property name="file">/home/anegrel/.config/gen-theme/wallpapers/space.jpg</property>
 	</object>
 </interface>
 

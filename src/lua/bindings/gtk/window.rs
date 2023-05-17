@@ -2,8 +2,12 @@ use gtk::{prelude::Cast, traits::GtkWindowExt};
 use mlua::UserData;
 
 use crate::{
-    add_field_getter, add_field_setter, add_method_no_args_no_return, add_upcast_method,
-    lua::bindings::{gtk::Widget, gtk_layer_shell::LayerShell},
+    add_field_getter, add_field_setter, add_mapped_field_getter, add_method_no_args_no_return,
+    add_upcast_method,
+    lua::bindings::{
+        gtk::{Root, Widget},
+        gtk_layer_shell::LayerShell,
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -36,6 +40,17 @@ impl UserData for Window {
 
         add_field_getter!(fields, default_height, default_height);
         add_field_setter!(fields, default_height, set_default_height);
+
+        add_mapped_field_getter!(fields, child, child, |widget: Option<gtk::Widget>| {
+            widget.map(Widget)
+        });
+        fields.add_field_method_set("child", |_vm, this, widget: Option<Widget>| {
+            match widget {
+                Some(w) => this.0.set_child(Some(&w.0)),
+                None => this.0.set_child(None::<&gtk::Widget>),
+            };
+            Ok(())
+        });
     }
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -48,6 +63,7 @@ impl UserData for Window {
         add_method_no_args_no_return!(methods, present);
 
         add_upcast_method!(methods, Widget);
+        add_upcast_method!(methods, Root);
 
         methods.add_method("shell", |_vm, this, ()| Ok(LayerShell::new(this.0.clone())));
     }

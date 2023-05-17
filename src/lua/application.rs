@@ -14,7 +14,7 @@ impl Application {
 
         // Define body if there is one.
         if let Some(body) = builder.object::<gtk::Widget>("body") {
-            // Initialize layer.
+            // Initialize layer before showing the window as it reitnitialize the window.
             gtk4_layer_shell::init_for_window(&app_window);
 
             app_window.set_child(Some(&body));
