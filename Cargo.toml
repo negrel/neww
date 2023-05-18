@@ -5,13 +5,18 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+strip = true
+lto = true
+debug = false
+
 [dependencies]
 anyhow = "1.0.71"
 env_logger = "0.10.0"
 gtk = { version = "0.6", package = "gtk4" }
 gtk4-layer-shell = "0.0.3"
 log = "0.4.17"
-mlua = { version = "0.8", features = ["luajit"] }
+mlua = { version = "0.8", features = ["luajit", "macros"] }
 quick-xml = "0.28"
 thiserror = "1"
 

@@ -7,7 +7,7 @@
 		shell.layer = "background"
 
 		-- Set window size to monitor size
-		local monitors = application.window:as_root().display.monitors
+		local monitors = application.window.display.monitors
 		local monitor = monitors[1]
 		application.window.default_height = monitor.scaled_geometry.height
 		application.window.default_width = monitor.scaled_geometry.width

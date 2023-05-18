@@ -78,14 +78,37 @@ macro_rules! add_downcast_method {
 }
 
 #[macro_export]
-macro_rules! add_upcast_method {
-    ($methods:ident, $upcast_type:ident) => {
-        $methods.add_method(
-            &concat!("as_", stringify!($upcast_type)).to_lowercase(),
-            |_vm, this, ()| {
-                let obj = this.0.clone().upcast::<gtk::$upcast_type>();
-                Ok($upcast_type(obj))
-            },
-        )
+macro_rules! add_upcast_methods {
+    ($methods:ident $(, $upcast_type:ident)+) => {
+        $(
+            $methods.add_method(
+                // e.g. "as_widget" for Widget upcast_type.
+                &concat!("as_", stringify!($upcast_type)).to_lowercase(),
+                |_vm, this, ()| {
+                    let obj = this.0.clone().upcast::<gtk::$upcast_type>();
+                    Ok($upcast_type(obj))
+                },
+            );
+        )+
+        // Add meta method so as_xxx is not mandatory.
+        $methods.add_meta_method(MetaMethod::Index, |vm, this, key: String| {
+            let this = this.to_owned();
+            let upcasts = vec![$(
+                // e.g. "as_widget" for Widget upcast_type.
+                concat!("as_", stringify!($upcast_type)).to_lowercase(),
+            )*];
+            let result = vm.load(chunk! {
+                for _, upcast in pairs($upcasts) do
+                    local ok, result = pcall(function()
+                        return $this[upcast]($this)[$key]
+                    end)
+                    if ok then
+                        return result
+                    end
+                end
+                return nil
+            }).eval::<mlua::Value>()?;
+            Ok(result)
+        });
     };
 }

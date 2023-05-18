@@ -1,9 +1,9 @@
 use gtk::{prelude::Cast, traits::GtkWindowExt};
-use mlua::UserData;
+use mlua::{chunk, MetaMethod, UserData};
 
 use crate::{
     add_field_getter, add_field_setter, add_mapped_field_getter, add_method_no_args_no_return,
-    add_upcast_method,
+    add_upcast_methods,
     lua::bindings::{
         gtk::{Root, Widget},
         gtk_layer_shell::LayerShell,
@@ -62,8 +62,7 @@ impl UserData for Window {
         add_method_no_args_no_return!(methods, unminimize);
         add_method_no_args_no_return!(methods, present);
 
-        add_upcast_method!(methods, Widget);
-        add_upcast_method!(methods, Root);
+        add_upcast_methods!(methods, Root, Widget);
 
         methods.add_method("shell", |_vm, this, ()| Ok(LayerShell::new(this.0.clone())));
     }
