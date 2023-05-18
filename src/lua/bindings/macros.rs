@@ -39,10 +39,10 @@ macro_rules! add_field_setter {
 
 #[macro_export]
 macro_rules! add_mapped_field_setter {
-    ($fields:ident, $field_name:ident, $setter_name:ident, $convert:expr) => {
+    ($fields:ident, $field_name:ident, $setter_name:ident, $mapped_type:ident) => {
         $fields.add_field_method_set(stringify!($field_name), |vm, this, value| {
-            #[allow(clippy::redundant_closure_call)]
-            this.0.$setter_name($convert(vm, this, value)?);
+            use ::mlua::FromLua;
+            this.0.$setter_name(&$mapped_type::from_lua(value, vm)?.0);
             Ok(())
         })
     };
@@ -63,10 +63,11 @@ macro_rules! add_downcast_method {
         $methods.add_method(
             &concat!("as_", stringify!($downcast_type)).to_lowercase(),
             |_vm, this, ()| {
+                use ::gtk::prelude::Cast;
                 let obj = this
                     .0
                     .clone()
-                    .downcast::<gtk::$downcast_type>()
+                    .downcast::<::gtk::$downcast_type>()
                     .expect(concat!(
                         "Failed to downcast to ",
                         stringify!($downcast_type)
@@ -85,13 +86,15 @@ macro_rules! add_upcast_methods {
                 // e.g. "as_widget" for Widget upcast_type.
                 &concat!("as_", stringify!($upcast_type)).to_lowercase(),
                 |_vm, this, ()| {
+                    use ::gtk::prelude::Cast;
                     let obj = this.0.clone().upcast::<gtk::$upcast_type>();
                     Ok($upcast_type(obj))
                 },
             );
         )+
         // Add meta method so as_xxx is not mandatory.
-        $methods.add_meta_method(MetaMethod::Index, |vm, this, key: String| {
+        $methods.add_meta_method(::mlua::MetaMethod::Index, |vm, this, key: String| {
+            use ::mlua::chunk;
             let this = this.to_owned();
             let upcasts = vec![$(
                 // e.g. "as_widget" for Widget upcast_type.
@@ -107,7 +110,7 @@ macro_rules! add_upcast_methods {
                     end
                 end
                 return nil
-            }).eval::<mlua::Value>()?;
+            }).eval::<::mlua::Value>()?;
             Ok(result)
         });
     };
@@ -132,7 +135,7 @@ macro_rules! bind_c_enum {
         }
 
         impl TryFrom<&str> for $type {
-            type Error = anyhow::Error;
+            type Error = ::anyhow::Error;
 
             fn try_from(value: &str) -> Result<Self, Self::Error> {
                 let err_str = concat!("$type must be one of" $(, "\"", $variant_str, "\"")+, ", got {value:?}");
@@ -141,23 +144,23 @@ macro_rules! bind_c_enum {
                     $(
                         $variant_str => Ok(Self(<$module>::$variant)),
                     )+
-                    _ => Err(anyhow!(err_str)),
+                    _ => Err(anyhow::anyhow!(err_str)),
                 }
             }
         }
 
-        impl<'lua> ToLua<'lua> for $type {
-            fn to_lua(self, vm: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
-                Ok(mlua::Value::String(vm.create_string(&self.to_string())?))
+        impl<'lua> ::mlua::ToLua<'lua> for $type {
+            fn to_lua(self, vm: &'lua ::mlua::Lua) -> ::mlua::Result<mlua::Value<'lua>> {
+                Ok(::mlua::Value::String(vm.create_string(&self.to_string())?))
             }
         }
 
-        impl<'lua> FromLua<'lua> for $type {
-            fn from_lua(lua_value: mlua::Value<'lua>, _vm: &'lua mlua::Lua) -> mlua::Result<Self> {
+        impl<'lua> ::mlua::FromLua<'lua> for $type {
+            fn from_lua(lua_value: ::mlua::Value<'lua>, _vm: &'lua ::mlua::Lua) -> ::mlua::Result<Self> {
                 let variant = match lua_value {
-                    mlua::Value::String(str) => str,
+                    ::mlua::Value::String(str) => str,
                     _ => {
-                        return Err(mlua::Error::FromLuaConversionError {
+                        return Err(::mlua::Error::FromLuaConversionError {
                             from: lua_value.type_name(),
                             to: stringify!(<$module>),
                             message: Some("must be of type string".to_owned()),
@@ -167,13 +170,13 @@ macro_rules! bind_c_enum {
 
                 let variant = variant
                     .to_str()
-                    .map_err(|err| mlua::Error::FromLuaConversionError {
+                    .map_err(|err| ::mlua::Error::FromLuaConversionError {
                         from: "string",
                         to: stringify!(<$module>),
                         message: Some(err.to_string()),
                     })?;
 
-                $type::try_from(variant).map_err(|err| mlua::Error::FromLuaConversionError {
+                $type::try_from(variant).map_err(|err| ::mlua::Error::FromLuaConversionError {
                     from: "string",
                     to: stringify!(<$module>),
                     message: Some(err.to_string()),
@@ -182,7 +185,7 @@ macro_rules! bind_c_enum {
         }
         #[cfg(test)]
         mod test {
-            use claims::assert_ok;
+            use ::claims::assert_ok;
 
             use super::$type;
 
