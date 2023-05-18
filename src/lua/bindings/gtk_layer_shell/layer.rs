@@ -75,7 +75,7 @@ impl<'lua> FromLua<'lua> for Layer {
 mod test {
     use claims::assert_ok;
 
-    use crate::lua::gtk_layer_shell::Layer;
+    use crate::lua::bindings::gtk_layer_shell::Layer;
 
     #[test]
     fn from_string_to_string() {

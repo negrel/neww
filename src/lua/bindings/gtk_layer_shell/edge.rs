@@ -72,7 +72,7 @@ impl<'lua> FromLua<'lua> for Edge {
 mod test {
     use claims::assert_ok;
 
-    use crate::lua::gtk_layer_shell::Edge;
+    use crate::lua::bindings::gtk_layer_shell::Edge;
 
     #[test]
     fn from_string_to_string() {
