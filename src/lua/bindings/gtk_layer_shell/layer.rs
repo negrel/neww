@@ -1,6 +1,3 @@
-use anyhow::anyhow;
-use mlua::{FromLua, ToLua};
-
 use crate::bind_c_enum;
 
 bind_c_enum!(::gtk4_layer_shell::Layer as Layer with variants {

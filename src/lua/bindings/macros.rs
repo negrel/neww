@@ -117,6 +117,22 @@ macro_rules! add_upcast_methods {
 }
 
 #[macro_export]
+macro_rules! add_child_accessors {
+    ($fields:ident) => {
+        add_mapped_field_getter!($fields, child, child, |widget: Option<gtk::Widget>| {
+            widget.map(Widget)
+        });
+        $fields.add_field_method_set("child", |_vm, this, widget: Option<Widget>| {
+            match widget {
+                Some(w) => this.0.set_child(Some(&w.0)),
+                None => this.0.set_child(None::<&gtk::Widget>),
+            };
+            Ok(())
+        });
+    };
+}
+
+#[macro_export]
 macro_rules! bind_c_enum {
     ($module:path as $type:ident with variants { $($variant:ident as $variant_str:literal ,)+ }) => {
         #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]

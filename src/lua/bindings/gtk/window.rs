@@ -1,16 +1,16 @@
-use gtk::{prelude::Cast, traits::GtkWindowExt};
-use mlua::{chunk, MetaMethod, UserData};
+use gtk::traits::GtkWindowExt;
+use mlua::UserData;
 
 use crate::{
-    add_field_getter, add_field_setter, add_mapped_field_getter, add_method_no_args_no_return,
-    add_upcast_methods,
+    add_child_accessors, add_field_getter, add_field_setter, add_mapped_field_getter,
+    add_method_no_args_no_return, add_upcast_methods,
     lua::bindings::{
         gtk::{Root, Widget},
         gtk_layer_shell::LayerShell,
     },
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Window(pub gtk::Window);
 
 impl UserData for Window {
@@ -41,16 +41,7 @@ impl UserData for Window {
         add_field_getter!(fields, default_height, default_height);
         add_field_setter!(fields, default_height, set_default_height);
 
-        add_mapped_field_getter!(fields, child, child, |widget: Option<gtk::Widget>| {
-            widget.map(Widget)
-        });
-        fields.add_field_method_set("child", |_vm, this, widget: Option<Widget>| {
-            match widget {
-                Some(w) => this.0.set_child(Some(&w.0)),
-                None => this.0.set_child(None::<&gtk::Widget>),
-            };
-            Ok(())
-        });
+        add_child_accessors!(fields);
     }
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {

@@ -1,12 +1,16 @@
-use gtk::prelude::Cast;
-use mlua::{chunk, MetaMethod, UserData};
+use mlua::UserData;
 
 use crate::{
-    add_field_getter, add_field_setter, add_mapped_field_getter, add_upcast_methods,
-    lua::bindings::gtk::{Justification, Widget},
+    add_field_getter, add_field_setter, add_mapped_field_getter, add_mapped_field_setter,
+    add_upcast_methods,
+    lua::bindings::{
+        glib::GString,
+        gtk::{Justification, Widget},
+        pango::WrapMode,
+    },
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Label(pub gtk::Label);
 
 impl UserData for Label {
@@ -26,7 +30,19 @@ impl UserData for Label {
         add_field_getter!(fields, selectable, is_selectable);
         add_field_setter!(fields, selectable, set_selectable);
 
+        add_field_getter!(fields, xalign, xalign);
+        add_field_getter!(fields, yalign, yalign);
+        add_field_setter!(fields, yalign, set_yalign);
+        add_field_setter!(fields, xalign, set_xalign);
+
         add_mapped_field_getter!(fields, justify, justify, Justification);
+        add_mapped_field_getter!(fields, wrap_mode, wrap_mode, WrapMode);
+
+        add_mapped_field_getter!(fields, label, label, GString);
+        add_mapped_field_setter!(fields, label, set_label, GString);
+
+        add_mapped_field_getter!(fields, text, text, GString);
+        add_mapped_field_setter!(fields, text, set_text, GString);
     }
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {

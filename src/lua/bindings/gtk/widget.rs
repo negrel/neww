@@ -1,8 +1,9 @@
-use gtk::{glib, prelude::Cast, traits::WidgetExt};
+use gtk::{glib, traits::WidgetExt};
 use mlua::{FromLua, UserData};
 
 use crate::{
-    add_downcast_method, add_field_getter, add_field_setter, add_mapped_field_getter, add_method,
+    add_downcast_method, add_field_getter, add_field_setter, add_mapped_field_getter,
+    add_mapped_field_setter, add_method,
     lua::bindings::{glib::GString, gtk::Window},
 };
 
@@ -82,12 +83,8 @@ impl UserData for Widget {
         add_field_getter!(fields, should_layout, should_layout);
 
         // Getter and setter for widget_name.
-        add_mapped_field_getter!(fields, widget_name, widget_name, |value| { GString(value) });
-        fields.add_field_method_set("widget_name", |vm, this, value| {
-            this.0
-                .set_widget_name(String::from_lua(value, vm)?.as_str());
-            Ok(())
-        });
+        add_mapped_field_getter!(fields, widget_name, widget_name, GString);
+        add_mapped_field_setter!(fields, widget_name, set_widget_name, GString);
     }
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {

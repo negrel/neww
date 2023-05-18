@@ -1,7 +1,3 @@
-use anyhow::anyhow;
-
-use mlua::{FromLua, ToLua};
-
 use crate::bind_c_enum;
 
 bind_c_enum!(::gtk::Justification as Justification with variants {
@@ -10,4 +6,3 @@ bind_c_enum!(::gtk::Justification as Justification with variants {
     Center as "center",
     Fill as "fill",
 });
-
