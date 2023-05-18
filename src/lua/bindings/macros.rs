@@ -112,3 +112,90 @@ macro_rules! add_upcast_methods {
         });
     };
 }
+
+#[macro_export]
+macro_rules! bind_c_enum {
+    ($module:path as $type:ident with variants { $($variant:ident as $variant_str:literal ,)+ }) => {
+        #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+        pub struct $type(pub $module);
+
+        impl ToString for $type {
+            fn to_string(&self) -> String {
+                match self.0 {
+                    $(
+                        <$module>::$variant => $variant_str,
+                    )+
+                    _ => unreachable!(),
+                }
+                .to_owned()
+            }
+        }
+
+        impl TryFrom<&str> for $type {
+            type Error = anyhow::Error;
+
+            fn try_from(value: &str) -> Result<Self, Self::Error> {
+                let err_str = concat!("$type must be one of" $(, "\"", $variant_str, "\"")+, ", got {value:?}");
+
+                match value {
+                    $(
+                        $variant_str => Ok(Self(<$module>::$variant)),
+                    )+
+                    _ => Err(anyhow!(err_str)),
+                }
+            }
+        }
+
+        impl<'lua> ToLua<'lua> for $type {
+            fn to_lua(self, vm: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
+                Ok(mlua::Value::String(vm.create_string(&self.to_string())?))
+            }
+        }
+
+        impl<'lua> FromLua<'lua> for $type {
+            fn from_lua(lua_value: mlua::Value<'lua>, _vm: &'lua mlua::Lua) -> mlua::Result<Self> {
+                let variant = match lua_value {
+                    mlua::Value::String(str) => str,
+                    _ => {
+                        return Err(mlua::Error::FromLuaConversionError {
+                            from: lua_value.type_name(),
+                            to: stringify!(<$module>),
+                            message: Some("must be of type string".to_owned()),
+                        })
+                    }
+                };
+
+                let variant = variant
+                    .to_str()
+                    .map_err(|err| mlua::Error::FromLuaConversionError {
+                        from: "string",
+                        to: stringify!(<$module>),
+                        message: Some(err.to_string()),
+                    })?;
+
+                $type::try_from(variant).map_err(|err| mlua::Error::FromLuaConversionError {
+                    from: "string",
+                    to: stringify!(<$module>),
+                    message: Some(err.to_string()),
+                })
+            }
+        }
+        #[cfg(test)]
+        mod test {
+            use claims::assert_ok;
+
+            use super::$type;
+
+            #[test]
+            fn from_string_to_string() {
+                $(
+                    let result = $type::try_from($variant_str);
+                    assert_ok!(&result);
+                    let variant = result.unwrap();
+                    assert_eq!($type(<$module>::$variant), variant);
+                    assert_eq!($variant_str, variant.to_string());
+                )+
+            }
+        }
+    };
+}

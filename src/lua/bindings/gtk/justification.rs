@@ -1,11 +1,13 @@
 use anyhow::anyhow;
+
 use mlua::{FromLua, ToLua};
 
 use crate::bind_c_enum;
 
-bind_c_enum!(::gtk4_layer_shell::Edge as Edge with variants {
+bind_c_enum!(::gtk::Justification as Justification with variants {
     Left as "left",
     Right as "right",
-    Bottom as "bottom",
-    Top as "top",
+    Center as "center",
+    Fill as "fill",
 });
+
