@@ -1,9 +1,12 @@
-use gtk::{glib, prelude::ButtonExt};
+use gtk::{
+    glib,
+    prelude::{ButtonExt, ObjectExt},
+};
 use mlua::UserData;
 
 use crate::{
-    add_child_accessors, add_field_getter, add_field_setter, add_mapped_field_getter,
-    add_mapped_field_setter, add_upcast_methods,
+    add_child_accessors, add_connect_methods, add_field_getter, add_field_setter,
+    add_mapped_field_getter, add_mapped_field_setter, add_upcast_methods,
     lua::bindings::{glib::GString, gtk::Widget},
 };
 
@@ -24,5 +27,7 @@ impl UserData for Button {
 
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         add_upcast_methods!(methods, Widget);
+
+        add_connect_methods!(methods, "clicked" as fn(Self) -> ());
     }
 }

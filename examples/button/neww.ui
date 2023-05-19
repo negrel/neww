@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+	<neww:script>
+		-- Signal as an argument.
+		local btn = application:find_widget_by_id("btn-hello"):as_button()
+		btn:connect("clicked", function()
+			print("Hello world")
+		end)
+
+		-- Signal in function name.
+		local btn = application:find_widget_by_id("btn-exit"):as_button()
+		btn:connect_clicked(function()
+			application.window:close()
+		end)
+
+		-- Signal with return type.
+		application.window:connect("close-request", function()
+			print("Closing window...")
+			return false
+		end)
+	</neww:script>
+	<object class="GtkBox" id="body">
+		<property name="orientation">vertical</property>
+		<child>
+			<object class="GtkButton" id="btn-hello">
+				<property name="label">Say "Hello world"</property>
+			</object>
+		</child>
+		<child>
+			<object class="GtkButton" id="btn-exit">
+				<property name="label">Exit</property>
+			</object>
+		</child>
+	</object>
+</interface>
+

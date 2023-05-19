@@ -3,6 +3,7 @@
 	<neww:script>
 		local ui = require("neww.ui")
 
+		-- Shell attributes must be set before window drawing.
 		local shell = application.window:shell()
 		shell.layer = "background"
 

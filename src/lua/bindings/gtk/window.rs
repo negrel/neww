@@ -1,9 +1,9 @@
-use gtk::traits::GtkWindowExt;
+use gtk::{glib, prelude::ObjectExt, traits::GtkWindowExt};
 use mlua::UserData;
 
 use crate::{
-    add_child_accessors, add_field_getter, add_field_setter, add_mapped_field_getter,
-    add_method_no_args_no_return, add_upcast_methods,
+    add_child_accessors, add_connect_methods, add_field_getter, add_field_setter,
+    add_mapped_field_getter, add_method_no_args_no_return, add_upcast_methods,
     lua::bindings::{
         gtk::{Root, Widget},
         gtk_layer_shell::LayerShell,
@@ -56,5 +56,7 @@ impl UserData for Window {
         add_upcast_methods!(methods, Root, Widget);
 
         methods.add_method("shell", |_vm, this, ()| Ok(LayerShell::new(this.0.clone())));
+
+        add_connect_methods!(methods, "close-request" as fn(Self) -> bool);
     }
 }

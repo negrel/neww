@@ -4,7 +4,10 @@ use mlua::{FromLua, UserData};
 use crate::{
     add_downcast_method, add_field_getter, add_field_setter, add_mapped_field_getter,
     add_mapped_field_setter, add_method,
-    lua::bindings::{glib::GString, gtk::Window},
+    lua::bindings::{
+        glib::GString,
+        gtk::{Button, Label, Window},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -91,5 +94,7 @@ impl UserData for Widget {
         add_method!(methods, show, show);
 
         add_downcast_method!(methods, Window);
+        add_downcast_method!(methods, Button);
+        add_downcast_method!(methods, Label);
     }
 }

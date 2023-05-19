@@ -49,6 +49,22 @@ macro_rules! add_mapped_field_setter {
 }
 
 #[macro_export]
+macro_rules! add_child_accessors {
+    ($fields:ident) => {
+        add_mapped_field_getter!($fields, child, child, |widget: Option<gtk::Widget>| {
+            widget.map(Widget)
+        });
+        $fields.add_field_method_set("child", |_vm, this, widget: Option<Widget>| {
+            match widget {
+                Some(w) => this.0.set_child(Some(&w.0)),
+                None => this.0.set_child(None::<&gtk::Widget>),
+            };
+            Ok(())
+        });
+    };
+}
+
+#[macro_export]
 macro_rules! add_method {
     ($methods:ident, $method_name:ident, $obj_method_name:ident $(, $args:ident)*) => {
         $methods.add_method(stringify!($method_name), |_vm, this, ($($args, )*)| {
@@ -117,18 +133,70 @@ macro_rules! add_upcast_methods {
 }
 
 #[macro_export]
-macro_rules! add_child_accessors {
-    ($fields:ident) => {
-        add_mapped_field_getter!($fields, child, child, |widget: Option<gtk::Widget>| {
-            widget.map(Widget)
-        });
-        $fields.add_field_method_set("child", |_vm, this, widget: Option<Widget>| {
-            match widget {
-                Some(w) => this.0.set_child(Some(&w.0)),
-                None => this.0.set_child(None::<&gtk::Widget>),
-            };
-            Ok(())
-        });
+macro_rules! add_generic_connect_method {
+    ($methods:ident) => {
+        $methods.add_method(
+            "connect",
+            |vm, this, (signal_name, func): (String, ::mlua::Function)| {
+                let this = this.to_owned();
+                vm.load(::mlua::chunk! {
+                    local key = "connect_" .. $signal_name
+                    // kebab-case to snake_case
+                    key = string.gsub(key, "-", "_")
+                    $this[key]($this, $func)
+                })
+                .exec()?;
+                Ok(())
+            },
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! add_connect_methods {
+    ($methods:ident $(, $signal_name:literal as fn($args:ty) -> $returns:ty)+ ) => {
+        $methods.add_method(
+            "connect",
+            |vm, this, (signal, func): (String, ::mlua::Function)| {
+                let this = this.to_owned();
+                vm.load(::mlua::chunk! {
+                    local key = "connect_" .. $signal
+                    // kebab-case to snake_case
+                    key = string.gsub(key, "-", "_")
+                    $this[key]($this, $func)
+                })
+                .exec()?;
+                Ok(())
+            },
+        );
+
+        $(
+            $methods.add_method(
+                // kebab-case to snake_case
+                &concat!("connect_", $signal_name).replace("-", "_"),
+                |_vm, this, func: ::mlua::Function| {
+                    unsafe {
+                        // Change function lifetime to static.
+                        // This is safe because our lua VM is also static.
+                        let func = ::std::mem::transmute::<
+                            ::mlua::Function<'lua>,
+                            ::mlua::Function<'static>,
+                        >(func);
+                        this.0.connect_closure(
+                            $signal_name,
+                            false,
+                            ::gtk::glib::closure_local!(|btn| {
+                                let return_value = func
+                                    .call::<$args, $returns>(Self(btn))
+                                    .expect("lua signal handler returned an unexpected error");
+                                return_value
+                            }),
+                        );
+                    }
+                    Ok(())
+                },
+            )
+        )+
     };
 }
 

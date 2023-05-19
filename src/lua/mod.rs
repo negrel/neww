@@ -12,15 +12,16 @@ pub mod application;
 // Bindings
 pub mod bindings;
 
-pub fn new_vm(app: Application) -> Result<Lua, anyhow::Error> {
-    let vm = Lua::new();
+pub fn new_vm(app: Application) -> Result<&'static Lua, anyhow::Error> {
+    // Use a static lua VM as it is used to handle signals.
+    let vm = Lua::new().into_static();
 
     vm.globals()
         .set("application", app)
         .context("Failed to define global application table")?;
 
-    load_neww_ui_components_module(&vm).context("Failed to load neww.ui.components module")?;
-    load_neww_ui_module(&vm).context("Failed to load neww.ui module")?;
+    load_neww_ui_components_module(vm).context("Failed to load neww.ui.components module")?;
+    load_neww_ui_module(vm).context("Failed to load neww.ui module")?;
 
     Ok(vm)
 }
