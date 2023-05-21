@@ -65,15 +65,6 @@ macro_rules! add_child_accessors {
 }
 
 #[macro_export]
-macro_rules! add_method {
-    ($methods:ident, $method_name:ident, $obj_method_name:ident $(, $args:ident)*) => {
-        $methods.add_method(stringify!($method_name), |_vm, this, ($($args, )*)| {
-            Ok(this.0.$obj_method_name($($args, )*))
-        })
-    };
-}
-
-#[macro_export]
 macro_rules! add_downcast_method {
     ($methods:ident, $downcast_type:ident) => {
         $methods.add_method(
@@ -129,26 +120,6 @@ macro_rules! add_upcast_methods {
             }).eval::<::mlua::Value>()?;
             Ok(result)
         });
-    };
-}
-
-#[macro_export]
-macro_rules! add_generic_connect_method {
-    ($methods:ident) => {
-        $methods.add_method(
-            "connect",
-            |vm, this, (signal_name, func): (String, ::mlua::Function)| {
-                let this = this.to_owned();
-                vm.load(::mlua::chunk! {
-                    local key = "connect_" .. $signal_name
-                    // kebab-case to snake_case
-                    key = string.gsub(key, "-", "_")
-                    $this[key]($this, $func)
-                })
-                .exec()?;
-                Ok(())
-            },
-        )
     };
 }
 

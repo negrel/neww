@@ -1,6 +1,9 @@
+mod r#box;
 mod button;
+pub mod iface;
 mod justification;
 mod label;
+mod orientation;
 mod root;
 mod widget;
 mod window;
@@ -8,6 +11,8 @@ mod window;
 pub use button::Button;
 pub use justification::Justification;
 pub use label::Label;
+pub use orientation::Orientation;
+pub use r#box::Box;
 pub use root::Root;
 pub use widget::Widget;
 pub use window::Window;
