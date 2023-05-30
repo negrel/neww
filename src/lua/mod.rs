@@ -1,18 +1,12 @@
 use anyhow::Context;
 use mlua::{chunk, Lua, UserData};
 
-use self::{
-    application::Application,
-    bindings::gtk::{Button, Label, Window},
-};
-
-// Global application user data.
-pub mod application;
+use self::bindings::gtk::{Box, Button, Image, Label, Window};
 
 // Bindings
 pub mod bindings;
 
-pub fn new_vm(app: Application) -> Result<&'static Lua, anyhow::Error> {
+pub fn new_vm(app: impl UserData + 'static) -> Result<&'static Lua, anyhow::Error> {
     // Use a static lua VM as it is used to handle signals.
     let vm = Lua::new().into_static();
 
@@ -48,6 +42,8 @@ fn load_neww_ui_components_module(vm: &Lua) -> Result<(), anyhow::Error> {
         component!(Window);
         component!(Label);
         component!(Button);
+        component!(Image);
+        component!(Box);
 
         Ok(table)
     })?;

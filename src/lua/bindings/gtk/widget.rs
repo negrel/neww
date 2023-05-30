@@ -6,7 +6,7 @@ use crate::{
     add_mapped_field_setter, add_method_no_args_no_return,
     lua::bindings::{
         glib::GString,
-        gtk::{Box, Button, Label, Window},
+        gtk::{Box, Button, Image, Label, Window},
     },
 };
 
@@ -41,6 +41,7 @@ impl UserData for Widget {
         add_field_getter!(fields, is_focusable, is_focusable);
         add_field_getter!(fields, has_tooltip, has_tooltip);
         add_field_getter!(fields, is_hexpand_set, is_hexpand_set);
+        add_field_getter!(fields, is_vexpand_set, is_vexpand_set);
         add_field_getter!(fields, is_mapped, is_mapped);
 
         // Getter and setter for hexpand and vexpand.
@@ -72,8 +73,6 @@ impl UserData for Widget {
         add_field_getter!(fields, receives_default, receives_default);
         add_field_getter!(fields, scale_factor, scale_factor);
         add_field_getter!(fields, get_sensitive, get_sensitive);
-        add_field_getter!(fields, vexpands, vexpands);
-        add_field_getter!(fields, is_vexpand_set, is_vexpand_set);
         add_field_getter!(fields, get_visible, get_visible);
         add_field_getter!(fields, grab_focus, grab_focus);
         add_field_getter!(fields, has_default, has_default);
@@ -97,5 +96,6 @@ impl UserData for Widget {
         add_downcast_method!(methods, Button);
         add_downcast_method!(methods, Label);
         add_downcast_method!(methods, Box);
+        add_downcast_method!(methods, Image);
     }
 }
