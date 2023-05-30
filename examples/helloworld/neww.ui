@@ -1,13 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-	<neww:script>
-		local shell = application.window:shell()
-		shell.auto_exclusive_zone = true
-		shell:set_anchors({left = true, top = true, right = true})
-		shell.layer = "overlay"
-	</neww:script>
-	<object class="GtkLabel" id="body">
-		<property name="label">Hello world</property>
-	</object>
-</interface>
-
+<neww>
+	<interface>
+		<!-- Application window body -->
+		<box id="body" orientation="vertical">
+			<label>Hello world</label>
+			<button>Click me!</button>
+		</box>
+	</interface>
+</neww>

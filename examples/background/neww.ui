@@ -1,22 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-	<neww:script>
-		local ui = require("neww.ui")
+<neww>
+	<meta>
+		<script>
+			local ui = require("neww.ui")
 
-		-- Shell attributes must be set before window drawing.
-		local shell = application.window:shell()
-		shell.layer = "background"
+			-- Shell attributes must be set before window drawing.
+			<!-- local shell = application.window:shell() -->
+			<!-- shell.layer = "background" -->
 
-		-- Set window size to monitor size
-		local monitors = application.window.display.monitors
-		local monitor = monitors[1]
-		application.window.default_height = monitor.scaled_geometry.height
-		application.window.default_width = monitor.scaled_geometry.width
-	</neww:script>
-	<object class="GtkImage" id="body">
-		<property name="hexpand">True</property>
-		<property name="vexpand">True</property>
-		<property name="file">./image.jpg</property>
-	</object>
-</interface>
-
+			-- Set window size to monitor size
+			local monitors = application.window.display.monitors
+			local monitor = monitors[1]
+			application.window.default_height = monitor.scaled_geometry.height
+			application.window.default_width = monitor.scaled_geometry.width
+		</script>
+	</meta>
+	<interface>
+		<image id="body" hexpand="true" vexpand="true" file="./image.jpg" />
+	</interface>
+</neww>

@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 
 use env_logger::Env;
-use gtk::{prelude::*, Builder};
+use gtk::prelude::*;
 
-use crate::lua::application::Application;
+use crate::application::Application;
 
+mod application;
 mod lua;
 mod ui;
 
@@ -28,34 +29,10 @@ fn activate(app: &gtk::Application) {
 
     // Parse UI file.
     log::debug!("parsing {ui_filepath:?}...");
-    let ui = ui::parse(&ui_file).expect("Failed to parse UI file");
+    let ui = ui::deserialize(&ui_file).expect("Failed to parse UI file");
     log::debug!("{ui_filepath:?} parsed.");
 
-    // Build UI.
-    log::debug!("building GTK UI...");
-    let builder = Builder::new();
-    builder
-        .add_from_string(&ui.gtk_ui)
-        .expect("Failed to build GTK UI");
-    log::debug!("GTK UI built.");
-
-    let neww_app = Application::new(app, builder);
-
-    // Load scripts.
-    log::debug!("loading lua scripts...");
-    let lua_vm = lua::new_vm(neww_app).expect("Failed to initialize lua VM");
-    let mut chunks = Vec::new();
-    for script in ui.scripts {
-        chunks.push(lua_vm.load(Box::leak(Box::new(script.source))));
-    }
-    log::debug!("lua scripts loaded.");
-
-    // Execute scripts.
-    log::debug!("executing lua scripts...");
-    for chunk in chunks {
-        chunk.exec().expect("Failed to execute lua script");
-    }
-    log::debug!("lua scripts executed.");
+    Application::run(app, ui);
 }
 
 fn main() {
