@@ -105,10 +105,45 @@ struct_tag!(Neww as "neww" {
 
 struct_tag!(Meta as "meta" {
     #[serde(default, rename = "$value")]
-    pub scripts: Vec<Script>,
+    pub children: Vec<MetaTag>,
+});
+
+impl Meta {
+    pub fn scripts(&self) -> impl Iterator<Item = &Script> {
+        self.children
+            .iter()
+            .filter(|tag| matches!(tag, MetaTag::Script(_)))
+            .map(|el| match el {
+                MetaTag::Script(script) => script,
+                _ => unreachable!(),
+            })
+    }
+
+    pub fn styles(&self) -> impl Iterator<Item = &Style> {
+        self.children
+            .iter()
+            .filter(|tag| matches!(tag, MetaTag::Style(_)))
+            .map(|el| match el {
+                MetaTag::Style(style) => style,
+                _ => unreachable!(),
+            })
+    }
+}
+
+enum_tag!(MetaTag {
+    Script(Script),
+    Style(Style),
 });
 
 struct_tag!(Script as "script" {
+    #[serde(default, rename = "$text")]
+    pub inline: Option<String>,
+
+    #[serde(default, rename = "@src")]
+    pub source_path: Option<PathBuf>,
+});
+
+struct_tag!(Style as "style" {
     #[serde(default, rename = "$text")]
     pub inline: Option<String>,
 
@@ -165,6 +200,9 @@ impl Into<gtk::Child> for Object {
 }
 
 component!(Window as "window" {
+    #[serde(default, rename = "@layer")]
+    is_layer: bool,
+
     #[serde(default, rename = "$value")]
     child: Option<Object>,
 });
@@ -336,6 +374,7 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
+                        is_layer: false
                     }))]
                 }
             },
@@ -360,6 +399,7 @@ mod test {
                         vexpand: None,
                         opacity: None,
                         child: None,
+                        is_layer: false
                     }))]
                 }
             },
@@ -393,6 +433,7 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
+                        is_layer: false,
                         child: Some(Object::Box(StdBox::new(Box {
                             id: None,
                             css_classes: None,
@@ -436,7 +477,7 @@ mod test {
                         <box hexpand="true">
                             <label>Hello world!</label>
                             <button>Button text</button>
-                            <image hexpand="true"/>
+                            <image hexpand="true" file="/dev/null" />
                         </box>
                     </window>
                 </interface>
@@ -453,6 +494,7 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
+                        is_layer: false,
                         child: Some(Object::Box(StdBox::new(Box {
                             id: None,
                             css_classes: None,
@@ -482,7 +524,8 @@ mod test {
                                     css_classes: None,
                                     hexpand: Some(true),
                                     vexpand: None,
-                                    opacity: None
+                                    opacity: None,
+                                    file: "/dev/null".to_owned()
                                 }))
                             ],
                         }))),

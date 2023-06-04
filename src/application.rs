@@ -1,5 +1,4 @@
-use anyhow::Context;
-use gtk::{traits::GtkWindowExt, Builder};
+use gtk::{gdk, traits::GtkWindowExt};
 use mlua::{FromLua, Lua, UserData};
 
 use crate::{
@@ -22,16 +21,27 @@ impl Application {
 
         let app = Self::new(app, builder);
 
-        // Execute lua scripts.
-        let lua_vm = lua::new_vm(app).expect("Failed to initialize lua VM");
         if let Some(meta) = app_ui.meta {
-            Self::exec_lua_scripts(lua_vm, meta.scripts);
+            // Load CSS styles.
+            let css_provider = gtk::CssProvider::new();
+            Self::load_styles(&css_provider, meta.styles());
+            if let Some(display) = gdk::Display::default() {
+                gtk::style_context_add_provider_for_display(
+                    &display,
+                    &css_provider,
+                    gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+                );
+            }
+
+            // Execute lua scripts.
+            let lua_vm = lua::new_vm(app).expect("Failed to initialize lua VM");
+            Self::exec_lua_scripts(lua_vm, meta.scripts());
         }
     }
 
     fn build_gtk_ui(app_iface: ui::Interface) -> gtk::Builder {
         log::debug!("building GTK UI...");
-        let builder = Builder::new();
+        let builder = gtk::Builder::new();
         builder
             .add_from_string(
                 &ui::gtk::serialize(&app_iface.into()).expect("GTK UI serialization failed"),
@@ -42,38 +52,36 @@ impl Application {
         builder
     }
 
-    fn exec_lua_scripts(lua_vm: &Lua, scripts: Vec<ui::Script>) {
-        log::debug!("executing lua scripts...");
-        if scripts
-            .iter()
-            .any(|s| s.source_path.is_none() && s.inline.is_none())
-        {
-            log::debug!("no lua script.");
-            return;
+    fn load_styles<'a, I: Iterator<Item = &'a ui::Style>>(
+        css_provider: &gtk::CssProvider,
+        styles: I,
+    ) {
+        for style in styles {
+            if let Some(source_path) = &style.source_path {
+                css_provider.load_from_path(source_path)
+            }
+            if let Some(inline_css) = &style.inline {
+                css_provider.load_from_data(inline_css)
+            }
         }
+    }
 
-        // Load script files.
-        let scripts: Result<Vec<String>, anyhow::Error> = scripts
-            .into_iter()
-            .map(|s| {
-                if let Some(filepath) = s.source_path {
-                    Ok(std::fs::read_to_string(filepath.clone())
-                        .context(format!("Failed to read {filepath:?} lua script"))?)
-                } else if let Some(source) = s.inline {
-                    Ok(source)
-                } else {
-                    Ok("".to_owned())
-                }
-            })
-            .collect();
-        let scripts = scripts.unwrap();
+    fn exec_lua_scripts<'a, I: Iterator<Item = &'a ui::Script>>(lua_vm: &Lua, scripts: I) {
+        log::debug!("executing lua scripts...");
 
         for script in scripts {
-            let chunk = lua_vm.load(&script);
-            chunk
-                .exec()
-                .context("Failed to execute lua script")
-                .unwrap()
+            if let Some(source_path) = &script.source_path {
+                lua_vm
+                    .load(source_path)
+                    .exec()
+                    .expect("Failed to execute lua script");
+            }
+            if let Some(inline_lua) = &script.inline {
+                lua_vm
+                    .load(inline_lua)
+                    .exec()
+                    .expect("Failed to execute inline lua script");
+            }
         }
 
         log::debug!("lua scripts successfully executed.");
