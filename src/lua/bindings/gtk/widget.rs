@@ -6,7 +6,7 @@ use crate::{
     add_mapped_field_setter, add_method_no_args_no_return,
     lua::bindings::{
         glib::GString,
-        gtk::{Box, Button, Image, Label, Window},
+        gtk::{Box, Button, Image, Label, Range, Scale, Window},
     },
 };
 
@@ -97,5 +97,7 @@ impl UserData for Widget {
         add_downcast_method!(methods, Label);
         add_downcast_method!(methods, Box);
         add_downcast_method!(methods, Image);
+        add_downcast_method!(methods, Range);
+        add_downcast_method!(methods, Scale);
     }
 }

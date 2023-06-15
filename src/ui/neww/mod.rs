@@ -175,6 +175,7 @@ enum_tag!(Object {
     Button(StdBox<Button>),
     Box(StdBox<Box>),
     Image(StdBox<Image>),
+    Scale(StdBox<Scale>),
 });
 
 #[allow(clippy::from_over_into)]
@@ -186,6 +187,7 @@ impl Into<gtk::Object> for Object {
             Object::Button(b) => b.into(),
             Object::Box(b) => b.into(),
             Object::Image(i) => i.into(),
+            Object::Scale(s) => s.into(),
         }
     }
 }
@@ -218,6 +220,7 @@ impl Into<gtk::Object> for StdBox<Window> {
             id: self.id,
             class: "GtkWindow".to_owned(),
             properties: widget_attributes_into_gtk_props!(self),
+            object_properties: vec![],
             children,
         }
     }
@@ -241,6 +244,7 @@ impl Into<gtk::Object> for StdBox<Label> {
             id: self.id,
             class: "GtkLabel".to_owned(),
             properties,
+            object_properties: vec![],
             children: vec![],
         }
     }
@@ -264,6 +268,7 @@ impl Into<gtk::Object> for StdBox<Button> {
             id: self.id,
             class: "GtkButton".to_owned(),
             properties,
+            object_properties: vec![],
             children: vec![],
         }
     }
@@ -292,6 +297,7 @@ impl Into<gtk::Object> for StdBox<Box> {
             id: self.id,
             class: "GtkBox".to_owned(),
             properties,
+            object_properties: vec![],
             children: self
                 .children
                 .into_iter()
@@ -334,7 +340,66 @@ impl Into<gtk::Object> for StdBox<Image> {
             id: self.id,
             class: "GtkImage".to_owned(),
             properties,
+            object_properties: vec![],
             children: vec![],
+        }
+    }
+}
+
+component!(Scale as "scale" {
+    #[serde(default, rename = "@value")]
+    range_value: usize,
+
+    #[serde(default, rename = "@min")]
+    range_min: usize,
+
+    #[serde(rename = "@max")]
+    range_max: Option<usize>,
+
+    #[serde(rename = "@step")]
+    range_step: Option<usize>,
+});
+
+#[allow(clippy::from_over_into)]
+impl Into<gtk::Object> for StdBox<Scale> {
+    fn into(self) -> gtk::Object {
+        let properties = widget_attributes_into_gtk_props!(self);
+        let range_min = self.range_min;
+        let range_max = self.range_max.unwrap_or(100);
+        let range_step = self.range_max.unwrap_or(1);
+
+        gtk::Object {
+            id: self.id,
+            class: "GtkScale".to_owned(),
+            properties,
+            children: vec![],
+            object_properties: vec![gtk::ObjectProperty {
+                name: "adjustment".to_owned(),
+                object: gtk::Object {
+                    id: None,
+                    class: "GtkAdjustment".to_owned(),
+                    properties: vec![
+                        gtk::Property {
+                            name: "lower".to_owned(),
+                            value: range_min.to_string(),
+                        },
+                        gtk::Property {
+                            name: "upper".to_owned(),
+                            value: range_max.to_string(),
+                        },
+                        gtk::Property {
+                            name: "step-increment".to_owned(),
+                            value: range_step.to_string(),
+                        },
+                        gtk::Property {
+                            name: "value".to_owned(),
+                            value: self.range_value.to_string(),
+                        },
+                    ],
+                    object_properties: vec![],
+                    children: vec![],
+                },
+            }],
         }
     }
 }

@@ -1,9 +1,21 @@
 <neww>
+	<meta>
+		<style>
+			label {
+				color: red;
+			}
+			button > label {
+				font-weight: bold;
+				color: green;
+			}
+		</style>
+	</meta>
 	<interface>
 		<!-- Application window body -->
 		<box id="body" orientation="vertical">
 			<label>Hello world</label>
 			<button>Click me!</button>
+			<scale hexpand="true" min="1" max="100" value="50"></scale>
 		</box>
 	</interface>
 </neww>

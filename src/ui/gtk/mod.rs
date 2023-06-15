@@ -19,6 +19,8 @@ pub struct Object {
     pub class: String,
     #[serde(default, rename = "property", skip_serializing_if = "Vec::is_empty")]
     pub properties: Vec<Property>,
+    #[serde(default, rename = "property", skip_serializing_if = "Vec::is_empty")]
+    pub object_properties: Vec<ObjectProperty>,
     #[serde(default, rename = "child", skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<Child>,
 }
@@ -34,6 +36,13 @@ pub struct Property {
     pub name: String,
     #[serde(rename = "$value")]
     pub value: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ObjectProperty {
+    #[serde(rename = "@name")]
+    pub name: String,
+    pub object: Object,
 }
 
 #[cfg(test)]
@@ -57,6 +66,7 @@ mod test {
                 id: None,
                 class: "GtkLabel".to_owned(),
                 properties: vec![],
+                object_properties: vec![],
                 children: vec![],
             }],
         });
@@ -74,6 +84,7 @@ mod test {
             objects: vec![Object {
                 id: None,
                 class: "GtkLabel".to_owned(),
+                object_properties: vec![],
                 properties: vec![Property {
                     name: "label".to_owned(),
                     value: "Hello world".to_owned(),
@@ -95,6 +106,7 @@ mod test {
             objects: vec![Object {
                 id: None,
                 class: "GtkBox".to_owned(),
+                object_properties: vec![],
                 properties: vec![Property {
                     name: "orientation".to_owned(),
                     value: "horizontal".to_owned(),
@@ -104,6 +116,7 @@ mod test {
                         object: Object {
                             id: None,
                             class: "GtkLabel".to_owned(),
+                            object_properties: vec![],
                             properties: vec![Property {
                                 name: "label".to_owned(),
                                 value: "Hello".to_owned(),
@@ -115,6 +128,7 @@ mod test {
                         object: Object {
                             id: None,
                             class: "GtkLabel".to_owned(),
+                            object_properties: vec![],
                             properties: vec![Property {
                                 name: "label".to_owned(),
                                 value: "world".to_owned(),

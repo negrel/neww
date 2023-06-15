@@ -1,3 +1,4 @@
+mod adjustment;
 mod r#box;
 mod button;
 pub mod iface;
@@ -5,16 +6,21 @@ mod image;
 mod justification;
 mod label;
 mod orientation;
+mod range;
 mod root;
+mod scale;
 mod widget;
 mod window;
 
+pub use adjustment::Adjustment;
 pub use button::Button;
 pub use image::Image;
 pub use justification::Justification;
 pub use label::Label;
 pub use orientation::Orientation;
 pub use r#box::Box;
+pub use range::Range;
 pub use root::Root;
+pub use scale::Scale;
 pub use widget::Widget;
 pub use window::Window;
