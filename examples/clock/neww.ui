@@ -1,0 +1,27 @@
+<neww>
+	<meta>
+		<script>
+			local timer = require("neww.timer")
+			local t = timer.set_timeout(function()
+				print("Hello from timer")
+			end, 3000)
+
+			-- Cancel timeout
+			-- timer.clear_timer(t)
+
+			local date_label = application:find_widget_by_id("date"):as_label()
+			local time_label = application:find_widget_by_id("time"):as_label()
+			local t = timer.set_interval(function()
+				date_label.text = os.date("%x")
+				time_label.text = os.date("%X")
+			end, 1000)
+		</script>
+	</meta>
+	<interface>
+		<!-- Application window body -->
+		<box id="body" orientation="vertical">
+			<label id="date"></label>
+			<label id="time"></label>
+		</box>
+	</interface>
+</neww>
