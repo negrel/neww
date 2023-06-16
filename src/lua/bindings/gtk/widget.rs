@@ -6,7 +6,7 @@ use crate::{
     add_mapped_field_setter, add_method_no_args_no_return,
     lua::bindings::{
         glib::GString,
-        gtk::{Box, Button, Image, Label, Range, Scale, Window},
+        gtk::{Align, Box, Button, Image, Label, Range, Scale, Window},
     },
 };
 
@@ -49,6 +49,18 @@ impl UserData for Widget {
         add_field_setter!(fields, hexpand, set_hexpand);
         add_field_getter!(fields, vexpand, vexpands);
         add_field_setter!(fields, vexpand, set_vexpand);
+
+        // Getter and setter for halign and valign.
+        add_mapped_field_getter!(fields, halign, halign, Align);
+        fields.add_field_method_set("halign", |_vm, this, align: Align| {
+            this.0.set_halign(align.0);
+            Ok(())
+        });
+        add_mapped_field_getter!(fields, valign, valign, Align);
+        fields.add_field_method_set("valign", |_vm, this, align: Align| {
+            this.0.set_valign(align.0);
+            Ok(())
+        });
 
         // Margins getter and setter.
         add_field_getter!(fields, margin_bottom, margin_bottom);

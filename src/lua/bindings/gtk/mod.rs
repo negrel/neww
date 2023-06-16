@@ -1,4 +1,5 @@
 mod adjustment;
+mod align;
 mod r#box;
 mod button;
 pub mod iface;
@@ -13,6 +14,7 @@ mod widget;
 mod window;
 
 pub use adjustment::Adjustment;
+pub use align::Align;
 pub use button::Button;
 pub use image::Image;
 pub use justification::Justification;
