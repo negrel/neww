@@ -92,19 +92,29 @@ fn load_neww_timer_module(vm: &'static Lua) -> Result<(), anyhow::Error> {
             let timers = timers.clone();
             table.set(
                 "set_interval",
-                vm.create_function(move |_vm, (callback, ms): (mlua::Function, u64)| {
-                    let source_id = gtk::glib::timeout_add_local(
-                        std::time::Duration::from_millis(ms),
-                        move || {
-                            let _ = callback.call::<_, ()>(());
-                            gtk::glib::Continue(true)
-                        },
-                    );
+                vm.create_function(
+                    move |_vm, (callback, ms, initial_run): (mlua::Function, u64, Option<bool>)| {
+                        if let Some(true) = initial_run {
+                            if let Err(err) = callback.call::<_, ()>(()) {
+                                log::error!("interval callback error {err}")
+                            }
+                        }
 
-                    timers.borrow_mut().push(source_id);
+                        let source_id = gtk::glib::timeout_add_local(
+                            std::time::Duration::from_millis(ms),
+                            move || {
+                                if let Err(err) = callback.call::<_, ()>(()) {
+                                    log::error!("interval callback error {err}")
+                                }
+                                gtk::glib::Continue(true)
+                            },
+                        );
 
-                    Ok(timers.borrow().len() - 1)
-                })?,
+                        timers.borrow_mut().push(source_id);
+
+                        Ok(timers.borrow().len() - 1)
+                    },
+                )?,
             )?;
         }
 
@@ -112,19 +122,29 @@ fn load_neww_timer_module(vm: &'static Lua) -> Result<(), anyhow::Error> {
             let timers = timers.clone();
             table.set(
                 "set_timeout",
-                vm.create_function(move |_vm, (callback, ms): (mlua::Function, u64)| {
-                    let source_id = gtk::glib::timeout_add_local(
-                        std::time::Duration::from_millis(ms),
-                        move || {
-                            let _ = callback.call::<_, ()>(());
-                            gtk::glib::Continue(false)
-                        },
-                    );
+                vm.create_function(
+                    move |_vm, (callback, ms, initial_run): (mlua::Function, u64, Option<bool>)| {
+                        if let Some(true) = initial_run {
+                            if let Err(err) = callback.call::<_, ()>(()) {
+                                log::error!("interval callback error {err}")
+                            }
+                        }
 
-                    timers.borrow_mut().push(source_id);
+                        let source_id = gtk::glib::timeout_add_local(
+                            std::time::Duration::from_millis(ms),
+                            move || {
+                                if let Err(err) = callback.call::<_, ()>(()) {
+                                    log::error!("timeout callback error {err}")
+                                }
+                                gtk::glib::Continue(false)
+                            },
+                        );
 
-                    Ok(timers.borrow().len() - 1)
-                })?,
+                        timers.borrow_mut().push(source_id);
+
+                        Ok(timers.borrow().len() - 1)
+                    },
+                )?,
             )?;
         }
 
