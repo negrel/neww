@@ -58,6 +58,21 @@ macro_rules! component {
             #[serde(rename = "@opacity")]
             opacity: Option<f64>,
 
+            #[serde(rename = "@halign")]
+            halign: Option<String>,
+
+            #[serde(rename = "@valign")]
+            valign: Option<String>,
+
+            #[serde(rename = "@justify")]
+            justify: Option<String>,
+
+            #[serde(rename = "@wrap_mode")]
+            wrap_mode: Option<String>,
+
+            #[serde(rename = "@wrap")]
+            wrap: Option<bool>,
+
             $(
                 $(#[$field_attr])*
                 $field: $ty,
@@ -72,6 +87,12 @@ macro_rules! widget_attributes_into_gtk_props {
         let mut properties = Vec::new();
 
         // IDs css classes are handled per component.
+        if let Some(id) = $self.id.clone() {
+            properties.push(gtk::Property {
+                name: "name".to_owned(),
+                value: id,
+            })
+        }
 
         if let Some(hexpand) = $self.hexpand {
             properties.push(gtk::Property {
@@ -91,6 +112,41 @@ macro_rules! widget_attributes_into_gtk_props {
             properties.push(gtk::Property {
                 name: "opacity".to_owned(),
                 value: opacity.to_string(),
+            });
+        }
+
+        if let Some(halign) = $self.halign {
+            properties.push(gtk::Property {
+                name: "halign".to_owned(),
+                value: halign.to_string(),
+            });
+        }
+
+        if let Some(valign) = $self.valign {
+            properties.push(gtk::Property {
+                name: "valign".to_owned(),
+                value: valign.to_string(),
+            });
+        }
+
+        if let Some(justify) = $self.justify {
+            properties.push(gtk::Property {
+                name: "justify".to_owned(),
+                value: justify.to_string(),
+            });
+        }
+
+        if let Some(wrap_mode) = $self.wrap_mode {
+            properties.push(gtk::Property {
+                name: "wrap_mode".to_owned(),
+                value: wrap_mode.to_string(),
+            });
+        }
+
+        if let Some(wrap) = $self.wrap {
+            properties.push(gtk::Property {
+                name: "wrap".to_owned(),
+                value: wrap.to_string(),
             });
         }
 
@@ -217,7 +273,7 @@ impl Into<gtk::Object> for StdBox<Window> {
             children.push(child.into())
         }
         gtk::Object {
-            id: self.id,
+            id: self.id.clone(),
             class: "GtkWindow".to_owned(),
             properties: widget_attributes_into_gtk_props!(self),
             object_properties: vec![],
@@ -227,7 +283,7 @@ impl Into<gtk::Object> for StdBox<Window> {
 }
 
 component!(Label as "label" {
-    #[serde(rename = "$text")]
+    #[serde(default, rename = "$text")]
     label: String,
 });
 
@@ -251,7 +307,7 @@ impl Into<gtk::Object> for StdBox<Label> {
 }
 
 component!(Button as "button" {
-    #[serde(rename = "$text")]
+    #[serde(default, rename = "$text")]
     label: String,
 });
 
@@ -439,7 +495,9 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
-                        is_layer: false
+                        is_layer: false,
+                        halign: None,
+                        valign: None
                     }))]
                 }
             },
@@ -464,6 +522,8 @@ mod test {
                         vexpand: None,
                         opacity: None,
                         child: None,
+                        halign: None,
+                        valign: None,
                         is_layer: false
                     }))]
                 }
@@ -498,6 +558,8 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
+                        halign: None,
+                        valign: None,
                         is_layer: false,
                         child: Some(Object::Box(StdBox::new(Box {
                             id: None,
@@ -506,6 +568,8 @@ mod test {
                             hexpand: None,
                             vexpand: None,
                             opacity: None,
+                            halign: None,
+                            valign: None,
                             children: vec![
                                 Object::Label(StdBox::new(Label {
                                     id: None,
@@ -513,6 +577,8 @@ mod test {
                                     hexpand: None,
                                     vexpand: None,
                                     opacity: None,
+                                    halign: None,
+                                    valign: None,
                                     label: "Hello world!".to_owned(),
                                 })),
                                 Object::Button(StdBox::new(Button {
@@ -521,6 +587,8 @@ mod test {
                                     hexpand: None,
                                     vexpand: None,
                                     opacity: None,
+                                    halign: None,
+                                    valign: None,
                                     label: "Button text".to_owned(),
                                 }))
                             ],
@@ -559,6 +627,8 @@ mod test {
                         hexpand: None,
                         vexpand: None,
                         opacity: None,
+                        halign: None,
+                        valign: None,
                         is_layer: false,
                         child: Some(Object::Box(StdBox::new(Box {
                             id: None,
@@ -567,6 +637,8 @@ mod test {
                             hexpand: Some(true),
                             vexpand: None,
                             opacity: None,
+                            halign: None,
+                            valign: None,
                             children: vec![
                                 Object::Label(StdBox::new(Label {
                                     id: None,
@@ -574,7 +646,9 @@ mod test {
                                     hexpand: None,
                                     vexpand: None,
                                     label: "Hello world!".to_owned(),
-                                    opacity: None
+                                    opacity: None,
+                                    halign: None,
+                                    valign: None,
                                 })),
                                 Object::Button(StdBox::new(Button {
                                     id: None,
@@ -582,7 +656,9 @@ mod test {
                                     hexpand: None,
                                     vexpand: None,
                                     label: "Button text".to_owned(),
-                                    opacity: None
+                                    opacity: None,
+                                    halign: None,
+                                    valign: None,
                                 })),
                                 Object::Image(StdBox::new(Image {
                                     id: None,
@@ -590,6 +666,8 @@ mod test {
                                     hexpand: Some(true),
                                     vexpand: None,
                                     opacity: None,
+                                    halign: None,
+                                    valign: None,
                                     file: "/dev/null".to_owned()
                                 }))
                             ],

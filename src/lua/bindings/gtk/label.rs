@@ -36,7 +36,21 @@ impl UserData for Label {
         add_field_setter!(fields, xalign, set_xalign);
 
         add_mapped_field_getter!(fields, justify, justify, Justification);
+        fields.add_field_method_set(
+            "justification",
+            |_vm, this, justification: Justification| {
+                this.0.set_justify(justification.0);
+                Ok(())
+            },
+        );
+
+        add_field_getter!(fields, wraps, wraps);
+        add_field_setter!(fields, wraps, set_wrap);
         add_mapped_field_getter!(fields, wrap_mode, wrap_mode, WrapMode);
+        fields.add_field_method_set("wrap_mode", |_vm, this, wrap_mode: WrapMode| {
+            this.0.set_wrap_mode(wrap_mode.0);
+            Ok(())
+        });
 
         add_mapped_field_getter!(fields, label, label, GString);
         add_mapped_field_setter!(fields, label, set_label, GString);
