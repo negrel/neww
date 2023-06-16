@@ -99,7 +99,8 @@ macro_rules! add_upcast_methods {
                 },
             );
         )+
-        // Add meta method so as_xxx is not mandatory.
+
+        // Add meta method so as_xxx is optional for upcast.
         $methods.add_meta_method(::mlua::MetaMethod::Index, |vm, this, key: String| {
             use ::mlua::chunk;
             let this = this.to_owned();
@@ -117,6 +118,24 @@ macro_rules! add_upcast_methods {
                     end
                 end
                 return nil
+            }).eval::<::mlua::Value>()?;
+            Ok(result)
+        });
+
+        // Add meta method so as_xxx is optional for upcast.
+        $methods.add_meta_method(::mlua::MetaMethod::NewIndex, |vm, this, (key, value): (String, mlua::Value)| {
+            use ::mlua::chunk;
+            let this = this.to_owned();
+            let upcasts = vec![$(
+                // e.g. "as_widget" for Widget upcast_type.
+                concat!("as_", stringify!($upcast_type)).to_lowercase(),
+            )*];
+            let result = vm.load(chunk! {
+                for _, upcast in pairs($upcasts) do
+                    local ok = pcall(function()
+                        $this[upcast]($this)[$key] = $value
+                    end)
+                end
             }).eval::<::mlua::Value>()?;
             Ok(result)
         });
@@ -156,9 +175,9 @@ macro_rules! add_connect_methods {
                         this.0.connect_closure(
                             $signal_name,
                             false,
-                            ::gtk::glib::closure_local!(|btn| {
+                            ::gtk::glib::closure_local!(|this| {
                                 let return_value = func
-                                    .call::<$args, $returns>(Self(btn))
+                                    .call::<$args, $returns>(Self(this))
                                     .expect("lua signal handler returned an unexpected error");
                                 return_value
                             }),
@@ -166,7 +185,7 @@ macro_rules! add_connect_methods {
                     }
                     Ok(())
                 },
-            )
+            );
         )+
     };
 }
