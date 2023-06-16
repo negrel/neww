@@ -111,7 +111,20 @@ macro_rules! add_upcast_methods {
             let result = vm.load(chunk! {
                 for _, upcast in pairs($upcasts) do
                     local ok, result = pcall(function()
-                        return $this[upcast]($this)[$key]
+                        local upcasted_this = $this[upcast]($this)
+                        local indexed_field = upcasted_this[$key]
+                        // Indexed field is a function from upcast.
+                        if type(indexed_field) == "function" then
+                            // Wrap function to upcast self parameter if needed.
+                            return function(self, ...)
+                                if type(self[upcast]) == "function" then
+                                    return indexed_field(self[upcast](self), ...)
+                                end
+                                return indexed_field(self, ...)
+                            end
+                        else
+                            return indexed_field
+                        end
                     end)
                     if ok then
                         return result
