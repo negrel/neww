@@ -5,6 +5,18 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "neww2gtk"
+path = "src/bin/neww2gtk/main.rs"
+
+[[bin]]
+name = "neww"
+path = "src/bin/neww/main.rs"
+
+[lib]
+name = "lib"
+path = "src/lib/mod.rs"
+
 [profile.release]
 strip = true
 lto = true
@@ -12,14 +24,12 @@ debug = false
 
 [dependencies]
 anyhow = "1"
+derive_builder = "0.12"
 env_logger = "0.10"
-gtk = { version = "0.6", package = "gtk4" }
-gtk4-layer-shell = "0.0.3"
 log = "0.4"
 mlua = { version = "0.8", features = ["luajit", "macros"] }
 quick-xml = { version = "0.28", features = ["serialize"] }
-serde = { version = "1.0.163", features = ["derive"] }
-thiserror = "1"
+serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 claims = "0.7"
