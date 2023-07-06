@@ -20,12 +20,16 @@
             overlays = [ fenix.overlays.default ];
           };
           lib = pkgs.lib;
+          luaPkgs = pkgs.luajitPackages;
 
           pkgBuildInputs = with pkgs; [
             pkg-config
             gtk4
             luajit
-          ] ++ [ self.packages."${system}".gtk4-layer-shell ];
+            dbus
+
+            openssl
+          ] ++ (with self.packages."${system}"; [ gtk4-layer-shell lgi ]);
         in
         {
           devShells = {
@@ -37,9 +41,15 @@
                 ]
               );
               LD_LIBRARY_PATH = "${lib.makeLibraryPath pkgBuildInputs}";
+              LUA_PATH = "${self.packages.${system}.lgi}/share/lua/5.1/?.lua;${self.packages.${system}.lgi}/share/lua/5.1/lgi/?.lua";
+              LUA_CPATH = "${self.packages.${system}.lgi}/lib/lua/5.1/?.so";
             };
           };
           packages = {
+            lgi = pkgs.callPackage ./nix/lgi.nix {
+              inherit (luaPkgs) lua buildLuaPackage;
+              inherit pkgs;
+            };
             gtk4-layer-shell = pkgs.callPackage ./nix/gtk4-layer-shell.nix { };
           };
         });
