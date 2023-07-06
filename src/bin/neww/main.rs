@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use anyhow::Context;
 use env_logger::Env;
@@ -12,12 +12,19 @@ pub fn main() -> Result<(), anyhow::Error> {
     // Retrieve .neww file from args.
     let files = &std::env::args().collect::<Vec<_>>();
     let fpath = files.get(1).context("UI file path is missing")?;
+    let fpath: PathBuf = fpath.into();
+    let fpath = fpath.canonicalize().expect("UI file doesn't exist");
+    // Safe to unwrap because path is absolute.
+    let fpath_parent = fpath.parent().unwrap();
 
     // Read and parse .neww file.
     log::debug!("reading {fpath:?} file");
-    let file_content = fs::read_to_string(fpath).context("failed to read file")?;
+    let file_content = fs::read_to_string(&fpath).context("failed to read file")?;
     log::debug!("parsing neww file");
     let neww: Neww = parse_neww(&file_content).context("failed to parse neww file")?;
+
+    log::debug!("changing working directory to {fpath_parent:?}");
+    std::env::set_current_dir(fpath_parent).context("failed to change working directory")?;
 
     // Convert interface section of .neww file into GTK UI.
     log::debug!("converting neww UI to GTK UI XML");
@@ -36,6 +43,15 @@ pub fn main() -> Result<(), anyhow::Error> {
     .context("failed to initialize lua VM, please report a bug")?;
 
     log::debug!("loading lua scripts");
+    for script in neww.meta.scripts {
+        vm.load(
+            &script
+                .source_code()
+                .context("failed to retrieve user lua code")?,
+        )
+        .exec()
+        .context("failed to run user lua code")?
+    }
 
     vm.load(chunk! {
         local main = Builder:get_object("main")

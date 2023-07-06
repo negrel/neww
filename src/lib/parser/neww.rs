@@ -1,4 +1,4 @@
-use std::string::FromUtf8Error;
+use std::{path::PathBuf, string::FromUtf8Error};
 
 use anyhow::{anyhow, Context};
 use derive_builder::Builder;
@@ -11,14 +11,32 @@ use crate::{parse_object, Object};
 #[derive(Debug, Clone, PartialEq, Eq, Builder)]
 pub struct Neww {
     #[builder(default)]
-    pub meta: Option<Meta>,
+    pub meta: Meta,
     #[builder(default)]
     pub interface: Interface,
 }
 
 /// Meta contains meta tags that aren't related to UI.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Meta {
+    pub scripts: Vec<Script>,
+}
+
+/// Script tag.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Meta {}
+pub enum Script {
+    Inline(String),
+    SourcePath(PathBuf),
+}
+
+impl Script {
+    pub fn source_code(&self) -> Result<String, std::io::Error> {
+        match self {
+            Script::Inline(inline) => Ok(inline.to_owned()),
+            Script::SourcePath(path) => std::fs::read_to_string(path),
+        }
+    }
+}
 
 /// Interface contains UI related tags that will be transpiled to GTK UI.
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Default)]
@@ -82,9 +100,7 @@ fn parse_neww_tag(
 
                 match name.as_str() {
                     "meta" => {
-                        neww.meta(Some(
-                            parse_meta_tag(tag, reader).context("failed to parse meta tag")?,
-                        ));
+                        neww.meta(parse_meta_tag(tag, reader).context("failed to parse meta tag")?);
                     }
                     "interface" => {
                         neww.interface(
@@ -128,9 +144,139 @@ fn parse_meta_tag(
     reader: &mut Reader<&[u8]>,
 ) -> Result<Meta, anyhow::Error> {
     let tag_name = qname_to_string(start.name()).context("failed to convert tag to String")?;
-    let mut meta = Meta {};
+    let mut meta = Meta {
+        scripts: Vec::new(),
+    };
 
-    Ok(meta)
+    loop {
+        let event = reader
+            .read_event()
+            .context("failed to read event")?
+            .into_owned();
+
+        match event {
+            quick_xml::events::Event::Start(tag) => {
+                let name =
+                    qname_to_string(tag.name()).context("failed to convert tag to String")?;
+
+                match name.as_str() {
+                    "script" => meta.scripts.push(
+                        parse_meta_script_tag(tag, reader).context("failed to parse script tag")?,
+                    ),
+                    _ => {
+                        return Err(anyhow!(
+                            "unexpected start tag: got <{name}>, expected <script>"
+                        ))
+                    }
+                }
+            }
+            quick_xml::events::Event::End(tag) => {
+                let name =
+                    qname_to_string(tag.name()).context("failed to convert tag to String")?;
+
+                if name == tag_name {
+                    return Ok(meta);
+                } else {
+                    return Err(anyhow!(
+                        "unexpected end tag: got </{name}>, expected </{tag_name}>"
+                    ));
+                }
+            }
+            quick_xml::events::Event::Empty(tag) => {
+                let name =
+                    qname_to_string(tag.name()).context("failed to convert tag to String")?;
+
+                match name.as_str() {
+                    "script" => meta.scripts.push(
+                        parse_meta_script_empty_tag(tag, reader)
+                            .context("failed to parse empty script tag")?,
+                    ),
+                    _ => {
+                        return Err(anyhow!(
+                            "unexpected start tag: got <{name}>, expected <script>"
+                        ))
+                    }
+                }
+            }
+            quick_xml::events::Event::Text(_txt) => return Err(anyhow!("unexpected text")),
+            quick_xml::events::Event::Decl(_)
+            | quick_xml::events::Event::PI(_)
+            | quick_xml::events::Event::DocType(_)
+            | quick_xml::events::Event::Comment(_)
+            | quick_xml::events::Event::CData(_) => continue,
+            quick_xml::events::Event::Eof => return Err(anyhow!("unexpected end of file")),
+        }
+    }
+}
+
+fn parse_meta_script_empty_tag(
+    start: BytesStart<'static>,
+    _reader: &mut Reader<&[u8]>,
+) -> Result<Script, anyhow::Error> {
+    if let Some(attr) = start.attributes().next() {
+        let attr = attr.context("failed to parse attribute")?;
+        let name =
+            qname_to_string(attr.key).context("failed to convert attribute name to String")?;
+
+        if name.as_str() == "src" {
+            let value = String::from_utf8(attr.value.to_vec())
+                .context("failed to convert inline script to String")?;
+
+            Ok(Script::SourcePath(value.into()))
+        } else {
+            Err(anyhow!(
+                "unexpected script tag attribute: got {name}, expected src"
+            ))
+        }
+    } else {
+        Err(anyhow!("missing src attribute on empty script tag"))
+    }
+}
+
+fn parse_meta_script_tag(
+    start: BytesStart<'static>,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Script, anyhow::Error> {
+    let tag_name = qname_to_string(start.name()).context("failed to convert tag to String")?;
+    let mut inline_script = "".to_owned();
+
+    if start.attributes().next().is_some() {
+        return Err(anyhow!("unexpected attribute on non empty script tag"));
+    }
+
+    loop {
+        let event = reader
+            .read_event()
+            .context("failed to read event")?
+            .into_owned();
+
+        match event {
+            quick_xml::events::Event::Start(_tag) => return Err(anyhow!("unexpected start tag")),
+            quick_xml::events::Event::Text(txt) => {
+                inline_script += &String::from_utf8(txt.to_vec())
+                    .context("failed to convert inline script to String")?;
+            }
+            quick_xml::events::Event::End(tag) => {
+                let name =
+                    qname_to_string(tag.name()).context("failed to convert tag to String")?;
+
+                if name == tag_name {
+                    return Ok(Script::Inline(inline_script));
+                } else {
+                    return Err(anyhow!(
+                        "unexpected end tag: got </{name}>, expected </{tag_name}>"
+                    ));
+                }
+            }
+            quick_xml::events::Event::Empty(_tag) => return Err(anyhow!("unexpected empty tag")),
+            quick_xml::events::Event::Decl(_)
+            | quick_xml::events::Event::PI(_)
+            | quick_xml::events::Event::DocType(_)
+            | quick_xml::events::Event::Comment(_)
+            | quick_xml::events::Event::CData(_) => continue,
+            quick_xml::events::Event::Eof => return Err(anyhow!("unexpected end of file")),
+        }
+    }
 }
 
 fn parse_interface_tag(
@@ -183,8 +329,8 @@ fn parse_interface_tag(
                     ));
                 }
             }
-            quick_xml::events::Event::Empty(_) => todo!(),
-            quick_xml::events::Event::Text(_) => todo!(),
+            quick_xml::events::Event::Empty(_tag) => return Err(anyhow!("unexpected empty tag")),
+            quick_xml::events::Event::Text(_txt) => return Err(anyhow!("unexpected text")),
             quick_xml::events::Event::Decl(_)
             | quick_xml::events::Event::PI(_)
             | quick_xml::events::Event::DocType(_)
