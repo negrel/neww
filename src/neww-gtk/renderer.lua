@@ -1,4 +1,6 @@
-local M = {}
+local M = {
+	__app = nil,
+}
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk")
@@ -19,7 +21,7 @@ end
 local expand_vtree
 expand_vtree = function(vnode)
 	-- Execute functional component.
-	if type(vnode.type) == "function" then
+	while type(vnode.type) == "function" do
 		vnode = vnode.type(vnode.props)
 	end
 
@@ -27,14 +29,23 @@ expand_vtree = function(vnode)
 	for i, child in ipairs(vnode.props) do
 		vnode.props[i] = expand_vtree(child)
 	end
+	-- Single child widgets.
+	if vnode.props.child then
+		vnode.props.child = expand_vtree(vnode.props.child)
+	end
 
 	-- Create native component.
 	return create_instance(vnode)
 end
 
+function M.setup(app_props)
+	M.__app = Gtk.Application(app_props)
+end
+
 function M.render(vnode, container)
-	container.child = expand_vtree(vnode)
-	container:show()
+	local tree = expand_vtree(vnode)
+
+	container.child = tree
 end
 
 return M
