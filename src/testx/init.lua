@@ -47,6 +47,10 @@ function M:execute_suite()
 	local end_time = os.clock()
 	print(string.format("\n%s | %d passed | %d failed | %.2fms", test_suite_result, passed, failed,
 		(end_time - start_time) * 1000))
+
+	if failed > 0 then
+		os.exit(1)
+	end
 end
 
 function M:__execute_test(file, name, test)
