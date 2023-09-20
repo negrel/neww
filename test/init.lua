@@ -3,7 +3,7 @@ Testx = require("src.testx")
 
 
 Testx:test("multiple call to use_state hook creates different state", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
@@ -42,7 +42,7 @@ Testx:test("multiple call to use_state hook creates different state", function()
 end)
 
 Testx:test("use_effect callback is called on first render (no dependency)", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
@@ -66,7 +66,7 @@ Testx:test("use_effect callback is called on first render (no dependency)", func
 end)
 
 Testx:test("use_effect callback is called on first render", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
@@ -91,7 +91,7 @@ Testx:test("use_effect callback is called on first render", function()
 end)
 
 Testx:test("use_effect callback is called on second render (no dependency)", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
@@ -124,7 +124,7 @@ end)
 
 
 Testx:test("use_effect callback is called on second render if a dependency changed", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
@@ -160,7 +160,7 @@ Testx:test("use_effect callback is called on second render if a dependency chang
 end)
 
 Testx:test("use_effect callback is NOT called on second render if NO dependency changed", function()
-	local hooks = require("src.neww.hooks")
+	local hooks = require("src.neww.__hooks")
 	hooks.reset()
 
 	local Component = function()
