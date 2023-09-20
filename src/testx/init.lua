@@ -75,4 +75,52 @@ function M:__execute_test(file, name, test)
 	return success
 end
 
+function M.fail(msg)
+	error(msg)
+end
+
+function M.assert(condition, msg)
+	if not condition then M.fail(msg) end
+end
+
+-- Function to check deep equality between two tables.
+local deepEqual
+deepEqual = function(value1, value2)
+	local valueType = type(value1)
+
+	-- Check if the tables have the same type.
+	if valueType ~= type(value2) then
+		return false
+	end
+
+	-- Not tables.
+	if valueType ~= "table" then
+		return value1 == value2
+	end
+
+	-- Check if the tables have the same length.
+	if #value1 ~= #value2 then
+		return false
+	end
+
+	-- Check the equality of each element in the tables.
+	for key, inner_value1 in pairs(value1) do
+		local inner_value2 = value2[key]
+		if not deepEqual(inner_value1, inner_value2) then
+			return false
+		end
+	end
+
+	return true
+end
+
+function M.assert_eq(left, right, msg)
+	if not deepEqual(left, right) then
+		real_print("values are not equal")
+		real_print("left  :", inspect(left))
+		real_print("right :", inspect(right))
+		M.fail(msg)
+	end
+end
+
 return M
