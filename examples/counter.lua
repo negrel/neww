@@ -1,12 +1,8 @@
-local lgi = require("lgi")
-local Gtk = lgi.require("Gtk")
-
 local neww = require("neww")
 local hooks = neww.hooks
+neww = neww.enable_gtk()
 
 local luax = require("neww.luax")
-
-local neww_gtk = require("neww-gtk")
 
 -- Our application component.
 function App(props)
@@ -46,9 +42,7 @@ function App(props)
 end
 
 -- Create and start the application.
-local gtk_app = Gtk.Application { application_id = 'dev.negrel.neww.example.counter' }
-
-local render = neww_gtk.create_app({
+local render = neww.create_app({
 	application_id = 'dev.negrel.neww.example.counter',
 }, {
 	title = 'Counter',
