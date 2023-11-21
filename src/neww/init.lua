@@ -1,4 +1,4 @@
-local hooks = require("neww.__hooks")
+local hooks = require("neww.hooks")
 
 local M = {
 	renderer = require("neww.renderer.noop"),
@@ -51,9 +51,15 @@ function M.hooks.use_state(...)
 	end
 end
 
-function M.render(self, vnode, container)
-	hooks.reset_index()
+function M.hooks.use_effect(fn, deps)
+	hooks.use_effect(function()
+		local cleanup = fn()
+		M.full_render()
+		return cleanup
+	end, deps)
+end
 
+function M.render(self, vnode, container)
 	-- Set full render.
 	if M.full_render == nil then
 		M.full_render = function()
