@@ -1,32 +1,32 @@
--- For GTK4 Layer Shell to get linked before libwayland-client we must explicitly load it before importing with lgi
-local ffi = require("ffi")
-ffi.cdef [[
-    void *dlopen(const char *filename, int flags);
-]]
-ffi.C.dlopen("libgtk4-layer-shell.so", 0x101)
-
-local lgi = require("lgi")
-local layer_shell = lgi.require("Gtk4LayerShell")
-
-local neww_gtk = require("neww-gtk")
 local neww = require("neww")
+neww = neww.enable_gtk()
 local luax = require("neww.luax")
+inspect = require("inspect")
 
 function App()
-	return luax.Image {
-		file = "examples/image.jpg"
+	return luax.Box {
+		id = "wallpaper"
 	}
 end
 
-local render = neww_gtk.create_app({
+local render = neww.create_app({
 	application_id = 'dev.negrel.neww.example.wallpaper',
 	on_activate = function(self, window)
-		layer_shell.init_for_window(window)
-		layer_shell.set_layer(window, layer_shell.Layer.BOTTOM)
-		layer_shell.set_anchor(window, layer_shell.Edge.BOTTOM, true)
-		layer_shell.set_anchor(window, layer_shell.Edge.LEFT, true)
-		layer_shell.set_anchor(window, layer_shell.Edge.RIGHT, true)
-		layer_shell.set_anchor(window, layer_shell.Edge.TOP, true)
+		neww.layer_shell.init_for_window(window)
+		neww.layer_shell.set_layer(window, neww.layer_shell.Layer.BOTTOM)
+		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.BOTTOM, true)
+		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.LEFT, true)
+		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.RIGHT, true)
+		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.TOP, true)
+
+		-- Load css.
+		local provider = neww.Gtk.CssProvider()
+		-- Relative to working directory from which this script is executed.
+		provider:load_from_path("examples/wallpaper.css")
+		local display = neww.Gdk.Display.get_default()
+		neww.Gtk.StyleContext.add_provider_for_display(
+			display, provider, 600 -- Priority
+		)
 	end
 }, {
 	title = "Wallpaper",
