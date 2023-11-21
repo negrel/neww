@@ -9,14 +9,11 @@ ffi.C.dlopen("libgtk4-layer-shell.so", 0x101)
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk")
-local Gdk = lgi.require("Gdk")
-local layer_shell = lgi.require("Gtk4LayerShell")
 
 local renderer = require("neww-gtk.renderer")
 
 -- Define renderer.
 local neww = require("neww")
-local luax = require("neww.luax")
 neww.renderer = renderer
 
 function M.create_app(app_props, window_props)
@@ -35,8 +32,14 @@ function M.create_app(app_props, window_props)
 				caller_app_on_activate(gtk_app, window)
 			end
 
+			local box = Gtk.Box {
+				homogeneous = true
+			}
+
+			window.child = box
+
 			window:show()
-			neww:render(vnode, window)
+			neww:render(vnode, box)
 		end
 
 
