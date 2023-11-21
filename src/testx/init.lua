@@ -84,8 +84,8 @@ function M.assert(condition, msg)
 end
 
 -- Function to check deep equality between two tables.
-local deepEqual
-deepEqual = function(value1, value2)
+local deep_equal
+deep_equal = function(value1, value2)
 	local valueType = type(value1)
 
 	-- Check if the tables have the same type.
@@ -106,7 +106,7 @@ deepEqual = function(value1, value2)
 	-- Check the equality of each element in the tables.
 	for key, inner_value1 in pairs(value1) do
 		local inner_value2 = value2[key]
-		if not deepEqual(inner_value1, inner_value2) then
+		if not deep_equal(inner_value1, inner_value2) then
 			return false
 		end
 	end
@@ -115,7 +115,7 @@ deepEqual = function(value1, value2)
 end
 
 function M.assert_eq(left, right, msg)
-	if not deepEqual(left, right) then
+	if not deep_equal(left, right) then
 		real_print("values are not equal")
 		real_print("left  :", inspect(left))
 		real_print("right :", inspect(right))
