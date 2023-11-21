@@ -10,7 +10,9 @@ ffi.C.dlopen("libgtk4-layer-shell.so", 0x101)
 local lgi = require("lgi")
 M.layer_shell = lgi.require("Gtk4LayerShell")
 M.Gtk = lgi.require("Gtk")
+M.Gdk = lgi.require("Gdk")
 M.GLib = lgi.require("GLib")
+M.Gio = lgi.require("Gio")
 
 function M.create_app(app_props, window_props)
 	local caller_app_on_activate = app_props.on_activate
@@ -18,6 +20,7 @@ function M.create_app(app_props, window_props)
 
 	-- Create application.
 	local gtk_app = M.Gtk.Application(app_props)
+	gtk_app.resource_base_path = os.getenv("NEWW_RESOURCE_PATH") or os.getenv("PWD")
 
 	return function(vnode)
 		gtk_app.on_activate = function()
