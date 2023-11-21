@@ -6,7 +6,7 @@ local hooks = neww.hooks
 
 local luax = require("neww.luax")
 
-neww.renderer = require("neww.renderer.gtk")
+local neww_gtk = require("neww-gtk")
 
 -- Our application component.
 function App(props)
@@ -14,7 +14,13 @@ function App(props)
 
 	return luax.Box {
 		homogeneous = true,
-		orientation = Gtk.Orientation.HORIZONTAL,
+		orientation = "HORIZONTAL",
+		luax.Button {
+			label = "-3",
+			on_clicked = function()
+				set_counter(counter - 3)
+			end
+		},
 		luax.Button {
 			label = "-",
 			on_clicked = function()
@@ -29,6 +35,12 @@ function App(props)
 			on_clicked = function()
 				set_counter(counter + 1)
 			end
+		},
+		luax.Button {
+			label = "+3",
+			on_clicked = function()
+				set_counter(counter + 3)
+			end
 		}
 	}
 end
@@ -36,16 +48,12 @@ end
 -- Create and start the application.
 local gtk_app = Gtk.Application { application_id = 'dev.negrel.neww.example.counter' }
 
-function gtk_app:on_activate()
-	local window = Gtk.Window {
-		application = self,
-		title = 'Counter',
-		default_width = 640,
-		default_height = 480,
-	}
-	window:show()
+local render = neww_gtk.create_app({
+	application_id = 'dev.negrel.neww.example.counter',
+}, {
+	title = 'Counter',
+	default_width = 640,
+	default_height = 480,
+})
 
-	neww:render(luax.App { initial_count = 3 }, window)
-end
-
-gtk_app:run { arg[0], ... }
+render(luax.App { initial_count = 3 })
