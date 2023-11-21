@@ -17,6 +17,7 @@
             buildInputs = with pkgs; [
               luajit
               luajitPackages.luarocks
+              luajitPackages.luacheck
               pkg-config
               gobject-introspection
               gtk4

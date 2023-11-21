@@ -10,5 +10,9 @@ virtualenv: .venv
 test:
 	LUA_PATH="?/init.lua;?.lua;?;.venv/share/lua/5.1/?.lua" $(LUA) tests/init.lua
 
+.PHONY: lint
+lint:
+	luacheck src tests
+
 example/%:
 	$(LUA) examples/$*.lua

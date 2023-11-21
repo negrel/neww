@@ -33,7 +33,7 @@ function M:execute_suite()
 
 		-- Run all tests from the same file
 		for _, test in ipairs(tests) do
-			local test_passed = self:__execute_test(test_file, test.name, test.test)
+			local test_passed = self.__execute_test(test_file, test.name, test.test)
 			if test_passed then
 				passed = passed + 1
 			else
@@ -53,7 +53,9 @@ function M:execute_suite()
 	end
 end
 
-function M:__execute_test(file, name, test)
+function M.__execute_test(file, name, test)
+	--luacheck: ignore setting read-only global variable print
+
 	local start_time = os.clock()
 	print = test_print(file, name) -- replace std print
 

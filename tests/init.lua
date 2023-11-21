@@ -1,4 +1,7 @@
+--luacheck: ignore setting read-only global variable print
+--luacheck: ignore setting non-standard global variable inspect
 inspect = require("inspect")
+--luacheck: ignore setting non-standard global variable Testx
 Testx = require("src.testx")
 
 
@@ -70,6 +73,7 @@ Testx:test("use_effect callback is called on first render", function()
 	hooks.reset()
 
 	local Component = function()
+		--luacheck: ignore unused variable _set_counter
 		local counter, _set_counter = hooks.use_state(1)
 		local use_effect_called = false
 
@@ -164,6 +168,7 @@ Testx:test("use_effect callback is NOT called on second render if NO dependency 
 	hooks.reset()
 
 	local Component = function()
+		--luacheck: ignore unused variable _set_counter
 		local counter, _set_counter = hooks.use_state(0)
 		local use_effect_called = false
 
