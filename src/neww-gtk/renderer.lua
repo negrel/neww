@@ -1,15 +1,18 @@
+local hooks = require("neww.hooks")
+
 local M = {
 	__app = nil,
 }
 
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk")
+local GLib = lgi.require("GLib")
 local GObject = lgi.require("GObject")
 
 -- Signals handlers lookup table.
 local signal_handlers_id = {}
 
-function connect_signal(instance, instance_key, signal_name, handler)
+local connect_signal = function(instance, instance_key, signal_name, handler)
 	local signal_id = instance[signal_name]:connect(handler)
 	if signal_handlers_id[instance_key] == nil then
 		signal_handlers_id[instance_key] = { [signal_name] = signal_id }
@@ -18,7 +21,7 @@ function connect_signal(instance, instance_key, signal_name, handler)
 	end
 end
 
-function disconnect_signal(instance, instance_key, signal_name)
+local disconnect_signal = function(instance, instance_key, signal_name)
 	if signal_handlers_id[instance_key] ~= nil and signal_handlers_id[instance_key][signal_name] ~= nil then
 		GObject.signal_handler_disconnect(instance, signal_handlers_id[instance_key][signal_name])
 	end
@@ -86,18 +89,30 @@ function M.setup(app_props)
 	M.__app = Gtk.Application(app_props)
 end
 
+local render_queued = false
+
 function M.render(vnode, container)
-	local vtree = expand_vtree(vnode)
+	if render_queued then return end
 
-	local container_child = Gtk.Widget.get_first_child(container)
+	render_queued = true
+	GLib.idle_add(GLib.PRIORITY_DEFAULT, function()
+		hooks.reset_index()
+		local vtree = expand_vtree(vnode)
 
-	-- Render entire subtree.
-	if container_child == nil then
-		local instance = create_instance(vtree)
-		container:append(instance)
-	else
-		M.reconciliate(container_child, vtree)
-	end
+		local container_child = Gtk.Widget.get_first_child(container)
+
+		-- Render entire subtree.
+		if container_child == nil then
+			local instance = create_instance(vtree)
+			container:append(instance)
+		else
+			M.reconciliate(container_child, vtree)
+		end
+
+		hooks.clean_leftovers()
+		render_queued = false
+		return false
+	end)
 end
 
 -- Function to check deep equality between two tables.

@@ -37,8 +37,8 @@ function M.create_app(app_props, window_props)
 			}
 
 			window.child = box
-
 			window:show()
+
 			neww:render(vnode, box)
 		end
 
