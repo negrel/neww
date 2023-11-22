@@ -1,29 +1,29 @@
 # `neww` - Negrel's Experimental Widgets for Wayland
 
-## Why ?
+`neww` is a lightweight library for creating standalone widgets in Lua using GTK.
+It enables developers to build interactive and declarative user interfaces, 
+similar to the [React](https://react.dev) framework in JavaScript.
 
-- What was your motivation?
-- Why did you build this project?
-- What problem does it solve?
-- What did you learn?
-- What makes your project stand out?
+It is inspired by [`eww`](https://github.com/elkowar/eww) but aims to provide a more
+readable and turing complete alternative.
 
-If your project has a lot of features, consider adding a "Features" section and listing them here.
+## Features
+
+* Declarative Syntax: Write UI components in a declarative way, making it easier
+to understand and maintain your code.
+* Component-based Architecture: Organize your UI into reusable and composable
+components.
+* React-like State Management: Manage component state efficiently using hooks.
+* Luax JSX Syntax: Write your UI components using a JSX-like syntax called Luax,
+providing a more concise and expressive way to define UI elements.
+* Standalone Widgets
 
 ## Getting started
 
-### Configuration
-
-Here is a table of configuration options:
-
-|  Option name  | Default value |           Description            |
-| :-----------: | :-----------: | :------------------------------: |
-| `OPTION_NAME` |    `VALUE`    |       Option description.        |
-
-### Building the project
+Run one of the example under `examples/`:
 
 ```shell
-make build
+make example/bar
 ```
 
 ### Running the tests
@@ -34,10 +34,10 @@ make tests
 
 ## Contributing
 
-If you want to contribute to `` to add a feature or improve the code contact
+If you want to contribute to `neww` to add a feature or improve the code contact
 me at [negrel.dev@protonmail.com](mailto:negrel.dev@protonmail.com), open an
-[issue](https://github.com/negrel//issues) or make a
-[pull request](https://github.com/negrel//pulls).
+[issue](https://github.com/negrel/neww/issues) or make a
+[pull request](https://github.com/negrel/neww/pulls).
 
 ## :stars: Show your support
 
