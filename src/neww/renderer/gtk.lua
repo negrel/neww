@@ -74,8 +74,8 @@ expand_vtree = function(vnode)
 	end
 
 	-- Render children
-	for i, child in ipairs(vnode.props) do
-		vnode.props[i] = expand_vtree(child)
+	for i, child in ipairs(vnode.children) do
+		vnode.children[i] = expand_vtree(child)
 	end
 	-- Single child widgets.
 	if vnode.props.child then

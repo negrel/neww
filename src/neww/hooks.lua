@@ -25,13 +25,14 @@ local hook = function(fn)
 end
 
 M.use_state = hook(function(index, initial_state)
-	swap_state(index, get_state(index) or initial_state)
+	local state = get_state(index) or { value = initial_state }
+	swap_state(index, state)
 
-	return get_state(index), function(new_state)
+	return state.value, function(new_state)
 		if type(new_state) == "function" then
-			swap_state(index, new_state(get_state(index)))
+			swap_state(index, { value = new_state(get_state(index).value) })
 		else
-			swap_state(index, new_state)
+			swap_state(index, { value = new_state })
 		end
 	end
 end)

@@ -279,4 +279,29 @@ Testx:test("use_effect clean up is called when component is removed", function()
 	Testx.assert_eq(cleanup_call_count, 1, "cleanup wasn't called twice")
 end)
 
+Testx:test("use_state contains a table with a cleanup function is never called", function()
+	local hooks = require("src.neww.hooks")
+	hooks.reset()
+
+	local Component = function()
+		hooks.use_state({ cleanup = function() error("cleanup called") end })
+	end
+
+	-- First render.
+	Component()
+	Component()
+
+	-- Reset internal hook index.
+	hooks.reset_index()
+	-- Now this is another render.
+
+	-- Second render.
+	Component()
+
+	-- Clean state from removed components
+	hooks.clean_leftovers()
+
+	-- No error was thrown.
+end)
+
 Testx:execute_suite()
