@@ -90,7 +90,6 @@ function M.setup(app_props)
 end
 
 local render_queued = false
-
 function M.render(vnode, container)
 	if render_queued then return end
 
@@ -146,13 +145,22 @@ deep_equal = function(value1, value2)
 	return true
 end
 
+local table_keys = function(t)
+	local keys = {}
+	for k in pairs(t) do
+		table.insert(keys, k)
+	end
+
+	return keys
+end
+
 function M.reconciliate(instance, vnode)
 	local instance_key = tostring(instance)
 	local instance_vnode = instances_vnode[instance_key]
 
 	local differentWidgetType = instance._name ~= "Gtk." .. vnode.type
 	local propsDiffer = not deep_equal(instance_vnode.props, vnode.props) or
-			not deep_equal(instance_vnode.handlers, vnode.handlers)
+			not deep_equal(table_keys(instance_vnode.handlers), table_keys(vnode.handlers))
 
 	if differentWidgetType or propsDiffer then
 		-- Recreate instance.

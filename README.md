@@ -26,6 +26,8 @@ Run one of the example under `examples/`:
 make example/bar
 ```
 
+![example bar](./.github/images/bar.png)
+
 ### Running the tests
 
 ```shell

@@ -32,7 +32,8 @@ function M.create_app(app_props, window_props)
 			end
 
 			local box = M.Gtk.Box {
-				homogeneous = true
+				homogeneous = true,
+				overflow = "HIDDEN"
 			}
 
 			window.child = box
