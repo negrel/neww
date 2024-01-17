@@ -2,7 +2,7 @@
 
 `neww` is a lightweight library for creating standalone widgets in Lua using GTK.
 It enables developers to build interactive and declarative user interfaces, 
-similar to the [React](https://react.dev) framework in JavaScript.
+similar to the [React](https://react.dev) library in JavaScript.
 
 It is inspired by [`eww`](https://github.com/elkowar/eww) but aims to provide a more
 readable and turing complete alternative.
