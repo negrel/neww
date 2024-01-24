@@ -15,4 +15,4 @@ lint:
 	luacheck src tests
 
 example/%:
-	$(LUA) examples/$*.lua
+	$(LUA) examples/$*/init.lua

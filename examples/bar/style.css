@@ -3,6 +3,7 @@
 
 window {
 	background: transparent;
+	font-size: 12px;
 }
 
 window > box {

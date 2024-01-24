@@ -22,7 +22,7 @@ local render = neww.create_app({
 		-- Load css.
 		local provider = neww.Gtk.CssProvider()
 		-- Relative to working directory from which this script is executed.
-		provider:load_from_path("examples/wallpaper.css")
+		provider:load_from_path("examples/wallpaper/style.css")
 		local display = neww.Gdk.Display.get_default()
 		neww.Gtk.StyleContext.add_provider_for_display(
 			display, provider, 600 -- Priority
