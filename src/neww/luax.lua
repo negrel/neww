@@ -6,6 +6,10 @@ setmetatable(M, {
 	__index = function(_t, k)
 		-- User defined component.
 		if type(_G[k]) == "function" then
+			if k == "App" then
+				return _G[k]
+			end
+
 			return function(props)
 				return neww.create_element(_G[k], props or {})
 			end

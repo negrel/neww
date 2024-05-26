@@ -70,10 +70,4 @@ function M.render(self, vnode, container)
 	self.renderer.render(vnode, container)
 end
 
-function M.enable_gtk()
-	local gtk = require("neww.gtk")
-	M.renderer = require("neww.renderer.gtk")
-	return gtk
-end
-
 return M

@@ -1,9 +1,19 @@
-local neww = require("neww")
+local neww = require("neww.gtk")
 local hooks = neww.hooks
-neww = neww.enable_gtk()
 local luax = require("neww.luax")
 
-inspect = require("inspect")
+_G.inspect = require("inspect")
+
+local display = neww.Gdk.Display.get_default()
+local monitors = display:get_monitors()
+
+local i = 0
+while true do
+	local monitor = neww.Gio.ListModel.get_item(monitors, i)
+	if monitor == nil then break end
+	print(i, monitor)
+	i = i + 1
+end
 
 local switch_workspace = function(id)
 	-- Edit to switch workspace.
@@ -23,8 +33,7 @@ local battery_percentage = function()
 	return result
 end
 
--- Our application component.
-function App()
+function Bar()
 	return luax.Box {
 		homogeneous = true,
 		orientation = "HORIZONTAL",
@@ -133,29 +142,17 @@ function Right()
 	}
 end
 
-local render = neww.create_app({
-	application_id = 'dev.negrel.neww.example.bar',
-	on_activate = function(_self, window)
-		neww.layer_shell.init_for_window(window)
-		neww.layer_shell.auto_exclusive_zone_enable(window)
-		neww.layer_shell.set_layer(window, neww.layer_shell.Layer.OVERLAY)
-		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.LEFT, true)
-		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.RIGHT, true)
-		neww.layer_shell.set_anchor(window, neww.layer_shell.Edge.TOP, true)
-
-		-- Load css.
-		local provider = neww.Gtk.CssProvider()
-		-- Relative to working directory from which this script is executed.
-		provider:load_from_path("examples/bar/style.css")
-		local display = neww.Gdk.Display.get_default()
-		neww.Gtk.StyleContext.add_provider_for_display(
-			display, provider, 600 -- Priority
-		)
-	end
-}, {
-	title = "Bar",
-	hexpand = true,
-	vexpand = true
-})
-
-render(luax.App {})
+-- Create app.
+luax.App {
+	application_id = "dev.negrel.neww.example.bar",
+	stacking = neww.stacking.OVERLAY,
+	exclusive = true,
+	anchors = { "top", "left", "right" },
+	css_files = { "examples/bar/style.css" },
+	window = {
+		title = "Bar",
+		hexpand = true,
+		vexpand = true
+	},
+	children = luax.Bar {},
+}
