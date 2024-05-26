@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, ... }:
     let
       outputsWithoutSystem = { };
       outputsWithSystem = flake-utils.lib.eachDefaultSystem
@@ -28,12 +28,14 @@
             devShells = {
               default = pkgs.mkShell {
                 inherit buildInputs;
+
+                LD_PRELOAD = "${lib.makeLibraryPath (with  self.packages."${system}";[gtk4-layer-shell])}/libgtk4-layer-shell.so";
                 LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
                 LUA_PATH = "src/?/init.lua;src/?.lua;src/?;.venv/share/lua/5.1/?.lua;${pkgs.luajit}/share/lua/5.1/?.lua;";
                 LUA_CPATH = "${self.packages.${system}.lgi}/lib/lua/5.1/?.so";
               };
             };
-            packages = rec {
+            packages = {
               lgi = pkgs.callPackage ./nix/lgi.nix {
                 inherit (luaPkgs) lua buildLuaPackage;
                 inherit pkgs;
